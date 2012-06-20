@@ -3,7 +3,7 @@
 
 import subprocess #re, subprocess, simplestyle, os#inkex, os, random, sys, subprocess, shutil
 
-def generate_final_file(isvector, colormode, width, height, temp_dir):
+def generate_final_file(isvector, colormode, width, height, strokewidth, temp_dir):
     if not isvector:
 
         command = []
@@ -17,7 +17,7 @@ def generate_final_file(isvector, colormode, width, height, temp_dir):
             command.append('-stroke')
             command.append('black')
             command.append('-strokewidth')
-            command.append('2')
+            command.append(str(strokewidth))
             command.append('-draw')
             command.append('line ' + str(20) + ',' + str(20) + ', ' + str(0) + ',' + str(20))
             command.append('-draw')
