@@ -283,7 +283,6 @@ class OutputProBitmap(inkex.Effect):
 
                 if selected_print_profile == '':
                     self.document_color_profile_title_jpeg.setEnabled(False)
-                    self.color_profile_name_choice_jpeg.setEnabled(False)
                     self.color_profile_choice_jpeg.setEnabled(False)
                     self.document_color_profile_title_jpeg.setText(_(u"Esse documento não está utilizando um perfil de cor."))
                 else:
