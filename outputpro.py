@@ -286,7 +286,6 @@ class OutputProBitmap(inkex.Effect):
                     self.color_profile_choice_jpeg.setEnabled(False)
                     self.document_color_profile_title_jpeg.setText(_(u"Esse documento não está utilizando um perfil de cor."))
                 else:
-                    #self.color_profile_name_choice.setCurrentIndex(list_of_profiles.index(selected_print_profile))
                     self.document_color_profile_title_jpeg.setText(_(u"O perfil que o Inkscape está utilizando é") + ' ' + selected_print_profile[:-4])
 
                 self.jpeg_interlace_option_jpeg = QtGui.QCheckBox(_(u"Entrelaçar"), parent=self.general_options_panel_jpeg)
@@ -303,7 +302,6 @@ class OutputProBitmap(inkex.Effect):
                 self.jpeg_optimize_option_jpeg = QtGui.QCheckBox(_(u"Otimizar"), parent=self.general_options_panel_jpeg)
                 self.jpeg_optimize_option_jpeg.setGeometry(10, 115, 260, 25)
                 self.jpeg_optimize_option_jpeg.setChecked(True)
-                #self.jpeg_optimize_option.toggled.connect(self.jpeg_optimize_click)
 
                 self.jpeg_noise_option_jpeg = QtGui.QCheckBox(_(u"Ruído"), parent=self.general_options_panel_jpeg)
                 self.jpeg_noise_option_jpeg.setGeometry(10, 150, 120, 25)
