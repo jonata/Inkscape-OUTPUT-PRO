@@ -4,3 +4,5 @@ Inkscape OUTPUT PRO Changelog
 20.05.2012
 
 - Initial version
+- Added option to mirror and invert the image for prepress
+- Added possibility to implement line width for cutmarks
