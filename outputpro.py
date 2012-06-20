@@ -216,10 +216,10 @@ class OutputProBitmap(inkex.Effect):
 
                 self.general_options_panel = QtGui.QWidget(parent=self)
                 self.general_geometry_panel = QtGui.QWidget(parent=self)
-                self.general_cut_marks_panel = QtGui.QWidget(parent=self)
+                self.general_prepress_panel = QtGui.QWidget(parent=self)
                 self.option_box.addTab(self.general_options_panel, _(u"Opções"))
                 self.option_box.addTab(self.general_geometry_panel, _(u"Tamanho"))
-                self.option_box.addTab(self.general_cut_marks_panel, _(u"Marcas de corte"))
+                self.option_box.addTab(self.general_prepress_panel, _(u"Pré-impressão"))
 
                 self.general_options_panel_jpeg = QtGui.QWidget(parent=self.general_options_panel)
                 self.general_options_panel_jpeg.setShown(False)
@@ -407,11 +407,33 @@ class OutputProBitmap(inkex.Effect):
                 self.area_to_export_idonly_check.setGeometry(10, 120, 400, 25)
                 self.area_to_export_idonly_check.setText(_(u"Exportar apenas o objeto"))
 
-                self.cut_marks_insert_check = QtGui.QCheckBox(parent=self.general_cut_marks_panel)
-                self.cut_marks_insert_check.setGeometry(10, 10, 200, 25)
-                self.cut_marks_insert_check.setText(_(u"Inserir marcas de corte"))
-                self.cut_marks_insert_check.setChecked(False)
-                self.cut_marks_insert_check.clicked.connect(self.cut_marks_insert_change)
+                self.prepress_paper_settings_label = QtGui.QLabel(parent=self.general_prepress_panel)
+                self.prepress_paper_settings_label.setGeometry(10, 10, 200, 15)
+                self.prepress_paper_settings_label.setText(_(u"Cofiguração do Papel ou filme").upper())
+                self.prepress_paper_settings_label.setFont(QtGui.QFont('Ubuntu', 8))
+
+                self.prepress_paper_settings_invert = QtGui.QCheckBox(parent=self.general_prepress_panel)
+                self.prepress_paper_settings_invert.setGeometry(10, 25, 200, 25)
+                self.prepress_paper_settings_invert.setText(_(u"Inverter"))
+                self.prepress_paper_settings_invert.setChecked(False)
+                self.prepress_paper_settings_invert.clicked.connect(self.generate_preview)
+
+                self.prepress_paper_settings_mirror = QtGui.QCheckBox(parent=self.general_prepress_panel)
+                self.prepress_paper_settings_mirror.setGeometry(10, 50, 200, 25)
+                self.prepress_paper_settings_mirror.setText(_(u"Espelhar"))
+                self.prepress_paper_settings_mirror.setChecked(False)
+                self.prepress_paper_settings_mirror.clicked.connect(self.generate_preview)
+
+                self.prepress_paper_cutmarks_label = QtGui.QLabel(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_label.setGeometry(10, 85, 200, 15)
+                self.prepress_paper_cutmarks_label.setText(_(u"Marcas de corte").upper())
+                self.prepress_paper_cutmarks_label.setFont(QtGui.QFont('Ubuntu', 8))
+
+                self.prepress_paper_cutmarks_check = QtGui.QCheckBox(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_check.setGeometry(10, 100, 200, 25)
+                self.prepress_paper_cutmarks_check.setText(_(u"Inserir marcas de corte"))
+                self.prepress_paper_cutmarks_check.setChecked(False)
+                self.prepress_paper_cutmarks_check.clicked.connect(self.cut_marks_insert_change)
 
                 self.export_button = QtGui.QPushButton(QtGui.QIcon.fromTheme("document-export"), _("Exportar"), parent=self)
                 self.export_button.setGeometry(740, 560, 200, 30)
@@ -466,7 +488,7 @@ class OutputProBitmap(inkex.Effect):
                         if '    jpeg:sampling-factor: ' in line:
                             file_info_final += 'Amostragem: <strong>' + line.replace('    jpeg:sampling-factor: ', '') + '</strong><br>'
 
-                    if self.cut_marks_insert_check.isChecked():
+                    if self.prepress_paper_cutmarks_check.isChecked():
                         margin = 20
                     else:
                         margin = 0
@@ -494,9 +516,6 @@ class OutputProBitmap(inkex.Effect):
 
                     self.view_image_info.setText(unicode(file_info_final + '<br><small>' + list_of_format_tips[list_of_export_formats[self.format_choice.currentIndex()]] + '</small>', 'utf-8'))
 
-                #elif self.option_box.currentIndex() == 1:
-                #    None
-
             def generate_final_file(self):
                 if list_of_export_formats[self.format_choice.currentIndex()] == 'JPEG':
                     jpeg_command = ['convert']
@@ -504,6 +523,12 @@ class OutputProBitmap(inkex.Effect):
                     if not self.cmyk_advanced_manipulation_option_jpeg.isChecked():
                         pre_command = ['convert']
                         pre_command.append(dirpathTempFolder +  '/source.tiff')
+
+                        if self.prepress_paper_settings_invert.isChecked():
+                            pre_command.append('-negate')
+
+                        if self.prepress_paper_settings_mirror.isChecked():
+                            pre_command.append('-flop')
 
                         if list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'CMYK' or list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'RGB':
                             if self.color_profile_choice_jpeg.isChecked():
@@ -524,7 +549,7 @@ class OutputProBitmap(inkex.Effect):
                         pre_command.append(dirpathTempFolder +  '/result.tiff')
                         subprocess.Popen(pre_command).wait()
 
-                        if self.cut_marks_insert_check.isChecked():
+                        if self.prepress_paper_cutmarks_check.isChecked():
                             file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
                             image_width = int(file_info.split(' ')[2].split('x')[0])
                             image_height = int(file_info.split(' ')[2].split('x')[1])
@@ -585,9 +610,6 @@ class OutputProBitmap(inkex.Effect):
 
                     subprocess.Popen(jpeg_command).wait()
 
-
-
-
             def change_format(self):
                 self.general_options_panel_jpeg.setShown(False)
 
@@ -606,7 +628,7 @@ class OutputProBitmap(inkex.Effect):
                     self.color_profile_choice_jpeg.setEnabled(True)
                     self.color_profile_choice_jpeg.setChecked(False)
                     self.document_color_profile_title_jpeg.setEnabled(True)
-                    self.general_cut_marks_panel.setEnabled(True)
+                    self.general_prepress_panel.setEnabled(True)
                 else:
                     self.cmyk_advanced_manipulation_option_jpeg.setEnabled(False)
                     self.cmyk_overblack_jpeg.setEnabled(False)
@@ -614,7 +636,7 @@ class OutputProBitmap(inkex.Effect):
                     #self.color_profile_choice_jpeg.setEnabled(False)
                     self.color_profile_choice_jpeg.setChecked(False)
                     self.document_color_profile_title_jpeg.setEnabled(False)
-                    self.general_cut_marks_panel.setEnabled(False)
+                    self.general_prepress_panel.setEnabled(False)
                 if list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'CMY':
                     self.color_mode_title_tip_jpeg.setText(u'Recomendado para casos específicos de impressão')
                 elif list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'RGB':
@@ -677,10 +699,8 @@ class OutputProBitmap(inkex.Effect):
                 image_width = int(file_info.split(' ')[2].split('x')[0])
                 image_height = int(file_info.split(' ')[2].split('x')[1])
 
-
-
                 for color in ['C', 'M', 'Y', 'K']:
-                    if self.cut_marks_insert_check.isChecked():
+                    if self.prepress_paper_cutmarks_check.isChecked():
                         extent_command = ['convert']
                         extent_command.append(dirpathTempFolder + "/separated" + area_to_export.replace(' ', '') + color + ".png")
                         extent_command.append('-extent')
@@ -690,7 +710,7 @@ class OutputProBitmap(inkex.Effect):
 
                     subprocess.Popen(['convert', dirpathTempFolder + '/' + "separated" + area_to_export.replace(' ', '') + color + ".png", '-colorspace', 'CMYK', '-channel', color, '-separate', dirpathTempFolder + '/' + "separated" + area_to_export.replace(' ', '') + color + ".png"]).wait()
 
-                    if self.cut_marks_insert_check.isChecked():
+                    if self.prepress_paper_cutmarks_check.isChecked():
                         cut_marks_command = ['composite']
                         cut_marks_command.append('-compose')
                         cut_marks_command.append('Screen')
@@ -708,7 +728,7 @@ class OutputProBitmap(inkex.Effect):
 
                 file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
-                if self.cut_marks_insert_check.isChecked():
+                if self.prepress_paper_cutmarks_check.isChecked():
                     image_size = str(int(int(file_info.split(' ')[2].split('x')[0]) + 40)) + 'x' + str(int(int(file_info.split(' ')[2].split('x')[1]) + 40))
                 else:
                     image_size = file_info.split(' ')[2]
@@ -806,14 +826,14 @@ class OutputProBitmap(inkex.Effect):
                 self.preview_zoom_title.setText(str(int(self.preview_zoom * 100)) + '%')
 
             def cut_marks_insert_change(self):
-                if self.cut_marks_insert_check.isChecked():
+                if self.prepress_paper_cutmarks_check.isChecked():
 
                     file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
                     image_width = int(file_info.split(' ')[2].split('x')[0])
                     image_height = int(file_info.split(' ')[2].split('x')[1])
 
-                    cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, dirpathTempFolder)
+                    cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, 2, dirpathTempFolder)
                 self.generate_preview()
 
             def format_preview_change(self):
@@ -841,7 +861,7 @@ class OutputProBitmap(inkex.Effect):
                 self.move((QtGui.QDesktopWidget().screenGeometry().width()-self.geometry().width())/2, (QtGui.QDesktopWidget().screenGeometry().height()-self.geometry().height())/2)
 
             def export(self):
-                self.location_path = QtGui.QFileDialog.getSaveFileName(self, _(u"Salvar imagem"), os.environ.get('HOME', None), unicode(str(_(u"Imagem JPEG (*.jpeg)")), 'utf-8')).toUtf8()
+                self.location_path = QtGui.QFileDialog.getSaveFileName(self, _(u"Salvar imagem"), os.environ.get('HOME', None), list_of_export_formats[self.format_choice.currentIndex()]).toUtf8()
 
                 if not self.format_preview_check.isChecked():
                     self.generate_final_file()
