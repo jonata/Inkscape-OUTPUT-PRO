@@ -1,5 +1,14 @@
 Inkscape OUTPUT PRO
 
+With this extension you will be able to export your Inkscape arts into
+a variety of formats and colormodes. As it initial and main goal,
+Inkscape OUTPUT PRO export into the CMYK colormode, compatible with
+the press graphic industry standards.
+
+It is possible to use specific ICC profiles, set other colormodes than
+RGB and CMYK like Grayscale and Lab, set specific JPEG configurations,
+insert pre-press marks and even more.
+
 To use the extension, you need to install them into your system.
 The files needed are the following:
 
