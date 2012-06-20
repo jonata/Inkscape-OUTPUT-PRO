@@ -531,7 +531,7 @@ class OutputProBitmap(inkex.Effect):
                             file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
                             image_width = int(file_info.split(' ')[2].split('x')[0])
                             image_height = int(file_info.split(' ')[2].split('x')[1])
-                            cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, dirpathTempFolder)
+                            cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, 2, dirpathTempFolder)
                             extent_command = ['convert']
                             extent_command.append(dirpathTempFolder + '/result.tiff')
                             extent_command.append('-extent')
