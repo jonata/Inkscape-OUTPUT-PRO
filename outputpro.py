@@ -408,32 +408,86 @@ class OutputProBitmap(inkex.Effect):
                 self.area_to_export_idonly_check.setText(_(u"Exportar apenas o objeto"))
 
                 self.prepress_paper_settings_label = QtGui.QLabel(parent=self.general_prepress_panel)
-                self.prepress_paper_settings_label.setGeometry(10, 10, 200, 15)
+                self.prepress_paper_settings_label.setGeometry(10, 10, 300, 15)
                 self.prepress_paper_settings_label.setText(_(u"Cofiguração do Papel ou filme").upper())
                 self.prepress_paper_settings_label.setFont(QtGui.QFont('Ubuntu', 8))
 
                 self.prepress_paper_settings_invert = QtGui.QCheckBox(parent=self.general_prepress_panel)
-                self.prepress_paper_settings_invert.setGeometry(10, 25, 200, 25)
+                self.prepress_paper_settings_invert.setGeometry(10, 25, 300, 25)
                 self.prepress_paper_settings_invert.setText(_(u"Inverter"))
                 self.prepress_paper_settings_invert.setChecked(False)
                 self.prepress_paper_settings_invert.clicked.connect(self.generate_preview)
 
                 self.prepress_paper_settings_mirror = QtGui.QCheckBox(parent=self.general_prepress_panel)
-                self.prepress_paper_settings_mirror.setGeometry(10, 50, 200, 25)
+                self.prepress_paper_settings_mirror.setGeometry(10, 50, 300, 25)
                 self.prepress_paper_settings_mirror.setText(_(u"Espelhar"))
                 self.prepress_paper_settings_mirror.setChecked(False)
                 self.prepress_paper_settings_mirror.clicked.connect(self.generate_preview)
 
                 self.prepress_paper_cutmarks_label = QtGui.QLabel(parent=self.general_prepress_panel)
-                self.prepress_paper_cutmarks_label.setGeometry(10, 85, 200, 15)
+                self.prepress_paper_cutmarks_label.setGeometry(10, 85, 300, 15)
                 self.prepress_paper_cutmarks_label.setText(_(u"Marcas de corte").upper())
                 self.prepress_paper_cutmarks_label.setFont(QtGui.QFont('Ubuntu', 8))
 
                 self.prepress_paper_cutmarks_check = QtGui.QCheckBox(parent=self.general_prepress_panel)
-                self.prepress_paper_cutmarks_check.setGeometry(10, 100, 200, 25)
+                self.prepress_paper_cutmarks_check.setGeometry(10, 100, 300, 25)
                 self.prepress_paper_cutmarks_check.setText(_(u"Inserir marcas de corte"))
                 self.prepress_paper_cutmarks_check.setChecked(False)
                 self.prepress_paper_cutmarks_check.clicked.connect(self.cut_marks_insert_change)
+
+                self.prepress_paper_cutmarks_strokewidth_label = QtGui.QLabel(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_strokewidth_label.setGeometry(10, 125, 200, 25)
+                self.prepress_paper_cutmarks_strokewidth_label.setText(_(u"Espessura da marca:"))
+                self.prepress_paper_cutmarks_strokewidth_label.setEnabled(False)
+
+                self.prepress_paper_cutmarks_strokewidth_value = QtGui.QLineEdit(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_strokewidth_value.setGeometry(210, 125, 50, 25)
+                self.prepress_paper_cutmarks_strokewidth_value.setText('1')
+                self.prepress_paper_cutmarks_strokewidth_value.setEnabled(False)
+                self.prepress_paper_cutmarks_strokewidth_value.editingFinished.connect(self.generate_preview)
+
+                self.prepress_paper_cutmarks_strokewidth_choice = QtGui.QComboBox(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_strokewidth_choice.setGeometry(260,125,50,25)
+                self.prepress_paper_cutmarks_strokewidth_choice.addItems(inkex.uuconv.keys())
+                self.prepress_paper_cutmarks_strokewidth_choice.setCurrentIndex(5)
+                self.prepress_paper_cutmarks_strokewidth_choice.activated.connect(self.generate_preview)
+                self.prepress_paper_cutmarks_strokewidth_choice.setEnabled(False)
+
+                self.prepress_paper_cutmarks_bleedsize_label = QtGui.QLabel(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_bleedsize_label.setGeometry(10, 150, 200, 25)
+                self.prepress_paper_cutmarks_bleedsize_label.setText(_(u"Sangria:"))
+                self.prepress_paper_cutmarks_bleedsize_label.setEnabled(False)
+
+                self.prepress_paper_cutmarks_bleedsize_value = QtGui.QLineEdit(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_bleedsize_value.setGeometry(210, 150, 50, 25)
+                self.prepress_paper_cutmarks_bleedsize_value.setText('5')
+                self.prepress_paper_cutmarks_bleedsize_value.setEnabled(False)
+                self.prepress_paper_cutmarks_bleedsize_value.editingFinished.connect(self.generate_preview)
+
+                self.prepress_paper_cutmarks_bleedsize_choice = QtGui.QComboBox(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_bleedsize_choice.setGeometry(260,150,50,25)
+                self.prepress_paper_cutmarks_bleedsize_choice.addItems(inkex.uuconv.keys())
+                self.prepress_paper_cutmarks_bleedsize_choice.setCurrentIndex(5)
+                self.prepress_paper_cutmarks_bleedsize_choice.activated.connect(self.generate_preview)
+                self.prepress_paper_cutmarks_bleedsize_choice.setEnabled(False)
+
+                self.prepress_paper_cutmarks_marksize_label = QtGui.QLabel(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_marksize_label.setGeometry(10, 175, 200, 25)
+                self.prepress_paper_cutmarks_marksize_label.setText(_(u"Tamanho da marca:"))
+                self.prepress_paper_cutmarks_marksize_label.setEnabled(False)
+
+                self.prepress_paper_cutmarks_marksize_value = QtGui.QLineEdit(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_marksize_value.setGeometry(210, 175, 50, 25)
+                self.prepress_paper_cutmarks_marksize_value.setText('5')
+                self.prepress_paper_cutmarks_marksize_value.setEnabled(False)
+                self.prepress_paper_cutmarks_marksize_value.editingFinished.connect(self.generate_preview)
+
+                self.prepress_paper_cutmarks_marksize_choice = QtGui.QComboBox(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_marksize_choice.setGeometry(260,175,50,25)
+                self.prepress_paper_cutmarks_marksize_choice.addItems(inkex.uuconv.keys())
+                self.prepress_paper_cutmarks_marksize_choice.setCurrentIndex(5)
+                self.prepress_paper_cutmarks_marksize_choice.activated.connect(self.generate_preview)
+                self.prepress_paper_cutmarks_marksize_choice.setEnabled(False)
 
                 self.export_button = QtGui.QPushButton(QtGui.QIcon.fromTheme("document-export"), _("Exportar"), parent=self)
                 self.export_button.setGeometry(740, 560, 200, 30)
@@ -464,6 +518,8 @@ class OutputProBitmap(inkex.Effect):
 
                     image_width = int(file_info.split(' ')[2].split('x')[0])
                     image_height = int(file_info.split(' ')[2].split('x')[1])
+                    #bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
+                    marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
 
                     file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
 
@@ -489,7 +545,7 @@ class OutputProBitmap(inkex.Effect):
                             file_info_final += 'Amostragem: <strong>' + line.replace('    jpeg:sampling-factor: ', '') + '</strong><br>'
 
                     if self.prepress_paper_cutmarks_check.isChecked():
-                        margin = 20
+                        margin = marksize
                     else:
                         margin = 0
 
@@ -524,12 +580,6 @@ class OutputProBitmap(inkex.Effect):
                         pre_command = ['convert']
                         pre_command.append(dirpathTempFolder +  '/source.tiff')
 
-                        if self.prepress_paper_settings_invert.isChecked():
-                            pre_command.append('-negate')
-
-                        if self.prepress_paper_settings_mirror.isChecked():
-                            pre_command.append('-flop')
-
                         if list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'CMYK' or list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'RGB':
                             if self.color_profile_choice_jpeg.isChecked():
                                 pre_command.append('-profile')
@@ -553,11 +603,13 @@ class OutputProBitmap(inkex.Effect):
                             file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
                             image_width = int(file_info.split(' ')[2].split('x')[0])
                             image_height = int(file_info.split(' ')[2].split('x')[1])
-                            cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, 2, dirpathTempFolder)
+                            bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
+                            marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                            cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, inkex.unittouu(str(self.prepress_paper_cutmarks_strokewidth_value.text()) + str(self.prepress_paper_cutmarks_strokewidth_choice.currentText())), bleedsize, marksize, dirpathTempFolder)
                             extent_command = ['convert']
                             extent_command.append(dirpathTempFolder + '/result.tiff')
                             extent_command.append('-extent')
-                            extent_command.append(str(image_width + 40) + 'x' + str(image_height + 40) + '-20-20')
+                            extent_command.append(str(image_width + (marksize*2)) + 'x' + str(image_height + (marksize*2)) + '-' + str(marksize) + '-' + str(marksize))
                             extent_command.append(dirpathTempFolder + '/result.tiff')
                             subprocess.Popen(extent_command).wait()
                             cut_marks_command = ['composite']
@@ -580,6 +632,12 @@ class OutputProBitmap(inkex.Effect):
                             subprocess.Popen(pre_command).wait()
 
                     jpeg_command.append(dirpathTempFolder +  '/result.tiff')
+
+                    if self.prepress_paper_settings_invert.isChecked():
+                        jpeg_command.append('-negate')
+
+                    if self.prepress_paper_settings_mirror.isChecked():
+                        jpeg_command.append('-flop')
 
                     jpeg_command.append('-quality')
                     jpeg_command.append(str(self.quality_choice_dial_jpeg.value()))
@@ -698,13 +756,14 @@ class OutputProBitmap(inkex.Effect):
 
                 image_width = int(file_info.split(' ')[2].split('x')[0])
                 image_height = int(file_info.split(' ')[2].split('x')[1])
+                marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
 
                 for color in ['C', 'M', 'Y', 'K']:
                     if self.prepress_paper_cutmarks_check.isChecked():
                         extent_command = ['convert']
                         extent_command.append(dirpathTempFolder + "/separated" + area_to_export.replace(' ', '') + color + ".png")
                         extent_command.append('-extent')
-                        extent_command.append(str(image_width + 40) + 'x' + str(image_height + 40) + '-20-20')
+                        extent_command.append(str(image_width + (marksize*2)) + 'x' + str(image_height + (marksize*2)) + '-' + str(marksize) + '-' + str(marksize))
                         extent_command.append(dirpathTempFolder +  "/separated" + area_to_export.replace(' ', '') + color + ".png")
                         subprocess.Popen(extent_command).wait()
 
@@ -729,7 +788,8 @@ class OutputProBitmap(inkex.Effect):
                 file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
                 if self.prepress_paper_cutmarks_check.isChecked():
-                    image_size = str(int(int(file_info.split(' ')[2].split('x')[0]) + 40)) + 'x' + str(int(int(file_info.split(' ')[2].split('x')[1]) + 40))
+                    marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                    image_size = str(int(int(file_info.split(' ')[2].split('x')[0]) + (marksize*2))) + 'x' + str(int(int(file_info.split(' ')[2].split('x')[1]) + (marksize*2)))
                 else:
                     image_size = file_info.split(' ')[2]
 
@@ -827,13 +887,33 @@ class OutputProBitmap(inkex.Effect):
 
             def cut_marks_insert_change(self):
                 if self.prepress_paper_cutmarks_check.isChecked():
+                    self.prepress_paper_cutmarks_strokewidth_label.setEnabled(True)
+                    self.prepress_paper_cutmarks_strokewidth_value.setEnabled(True)
+                    self.prepress_paper_cutmarks_strokewidth_choice.setEnabled(True)
+                    self.prepress_paper_cutmarks_bleedsize_label.setEnabled(True)
+                    self.prepress_paper_cutmarks_bleedsize_value.setEnabled(True)
+                    self.prepress_paper_cutmarks_bleedsize_choice.setEnabled(True)
+                    self.prepress_paper_cutmarks_marksize_label.setEnabled(True)
+                    self.prepress_paper_cutmarks_marksize_value.setEnabled(True)
+                    self.prepress_paper_cutmarks_marksize_choice.setEnabled(True)
 
-                    file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
+                    #file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
-                    image_width = int(file_info.split(' ')[2].split('x')[0])
-                    image_height = int(file_info.split(' ')[2].split('x')[1])
+                    #image_width = int(file_info.split(' ')[2].split('x')[0])
+                    #image_height = int(file_info.split(' ')[2].split('x')[1])
 
-                    cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, 2, dirpathTempFolder)
+                    #cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, 2, dirpathTempFolder)
+                else:
+                    self.prepress_paper_cutmarks_strokewidth_label.setEnabled(False)
+                    self.prepress_paper_cutmarks_strokewidth_value.setEnabled(False)
+                    self.prepress_paper_cutmarks_strokewidth_choice.setEnabled(False)
+                    self.prepress_paper_cutmarks_bleedsize_label.setEnabled(False)
+                    self.prepress_paper_cutmarks_bleedsize_value.setEnabled(False)
+                    self.prepress_paper_cutmarks_bleedsize_choice.setEnabled(False)
+                    self.prepress_paper_cutmarks_marksize_label.setEnabled(False)
+                    self.prepress_paper_cutmarks_marksize_value.setEnabled(False)
+                    self.prepress_paper_cutmarks_marksize_choice.setEnabled(False)
+
                 self.generate_preview()
 
             def format_preview_change(self):
