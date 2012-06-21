@@ -6,3 +6,9 @@ Inkscape OUTPUT PRO Changelog
 - Initial version
 - Added option to mirror and invert the image for prepress
 - Added possibility to implement line width for cutmarks
+
+21.05.2012
+
+- Added bleed size adjustment for cutmarks
+- Added mark size adjustment for cutmarks
+- Added mark stroke width adjustment for cutmarks
