@@ -217,9 +217,11 @@ class OutputProBitmap(inkex.Effect):
                 self.general_options_panel = QtGui.QWidget(parent=self)
                 self.general_geometry_panel = QtGui.QWidget(parent=self)
                 self.general_prepress_panel = QtGui.QWidget(parent=self)
+                self.general_imposition_panel = QtGui.QWidget(parent=self)
                 self.option_box.addTab(self.general_options_panel, _(u"Opções"))
                 self.option_box.addTab(self.general_geometry_panel, _(u"Tamanho"))
                 self.option_box.addTab(self.general_prepress_panel, _(u"Pré-impressão"))
+                self.option_box.addTab(self.general_imposition_panel, _(u"Imposição"))
 
                 self.general_options_panel_jpeg = QtGui.QWidget(parent=self.general_options_panel)
                 self.general_options_panel_jpeg.setShown(False)
@@ -489,6 +491,56 @@ class OutputProBitmap(inkex.Effect):
                 self.prepress_paper_cutmarks_marksize_choice.activated.connect(self.generate_preview)
                 self.prepress_paper_cutmarks_marksize_choice.setEnabled(False)
 
+                self.prepress_paper_cutmarks_inside_check = QtGui.QCheckBox(parent=self.general_prepress_panel)
+                self.prepress_paper_cutmarks_inside_check.setGeometry(10, 200, 300, 25)
+                self.prepress_paper_cutmarks_inside_check.setText(_(u"Sem marcas internas"))
+                self.prepress_paper_cutmarks_inside_check.setChecked(False)
+                self.prepress_paper_cutmarks_inside_check.setEnabled(False)
+                self.prepress_paper_cutmarks_inside_check.clicked.connect(self.generate_preview)
+
+                self.imposition_label = QtGui.QLabel(parent=self.general_imposition_panel)
+                self.imposition_label.setGeometry(10, 10, 300, 15)
+                self.imposition_label.setText(_(u"Quantidade de imposições").upper())
+                self.imposition_label.setFont(QtGui.QFont('Ubuntu', 8))
+
+                self.imposition_vertical_number_label = QtGui.QLabel(parent=self.general_imposition_panel)
+                self.imposition_vertical_number_label.setGeometry(10, 25, 200, 25)
+                self.imposition_vertical_number_label.setText(_(u"Linhas:"))
+
+                self.imposition_vertical_number_value = QtGui.QSpinBox(parent=self.general_imposition_panel)
+                self.imposition_vertical_number_value.setGeometry(210, 25, 50, 25)
+                self.imposition_vertical_number_value.setValue(1)
+                self.imposition_vertical_number_value.setRange(1, 999)
+                self.imposition_vertical_number_value.editingFinished.connect(self.generate_preview)
+
+                self.imposition_horizontal_number_label = QtGui.QLabel(parent=self.general_imposition_panel)
+                self.imposition_horizontal_number_label.setGeometry(10, 60, 200, 25)
+                self.imposition_horizontal_number_label.setText(_(u"Colunas:"))
+
+                self.imposition_horizontal_number_value = QtGui.QSpinBox(parent=self.general_imposition_panel)
+                self.imposition_horizontal_number_value.setGeometry(210, 60, 50, 25)
+                self.imposition_horizontal_number_value.setValue(1)
+                self.imposition_horizontal_number_value.setRange(1, 999)
+                self.imposition_horizontal_number_value.editingFinished.connect(self.generate_preview)
+
+                self.imposition_space_label = QtGui.QLabel(parent=self.general_imposition_panel)
+                self.imposition_space_label.setGeometry(10, 90, 200, 25)
+                self.imposition_space_label.setText(_(u"Espaço entre as marcas:"))
+
+                self.imposition_space_value = QtGui.QLineEdit(parent=self.general_imposition_panel)
+                self.imposition_space_value.setGeometry(210, 90, 50, 25)
+                self.imposition_space_value.setText('5')
+                self.imposition_space_value.editingFinished.connect(self.generate_preview)
+
+                self.imposition_space_choice = QtGui.QComboBox(parent=self.general_imposition_panel)
+                self.imposition_space_choice.setGeometry(260,90,50,25)
+                self.imposition_space_choice.addItems(inkex.uuconv.keys())
+                self.imposition_space_choice.setCurrentIndex(5)
+                self.imposition_space_choice.activated.connect(self.generate_preview)
+
+
+                #self.general_imposition_panel.setEnabled(False)
+
                 self.export_button = QtGui.QPushButton(QtGui.QIcon.fromTheme("document-export"), _("Exportar"), parent=self)
                 self.export_button.setGeometry(740, 560, 200, 30)
                 self.export_button.setIconSize(QtCore.QSize(20,20))
@@ -519,7 +571,7 @@ class OutputProBitmap(inkex.Effect):
                     image_width = int(file_info.split(' ')[2].split('x')[0])
                     image_height = int(file_info.split(' ')[2].split('x')[1])
                     #bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
-                    marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                    marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
 
                     file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
 
@@ -599,26 +651,51 @@ class OutputProBitmap(inkex.Effect):
                         pre_command.append(dirpathTempFolder +  '/result.tiff')
                         subprocess.Popen(pre_command).wait()
 
+                        file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
+                        bleedsize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
+                        marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                        imposition_space = inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
+
+                        image_width = []
+                        for i in range(self.imposition_vertical_number_value.value()):
+                            image_width.append(int(file_info.split(' ')[2].split('x')[0]))
+
+                        image_height = []
+                        for i in range(self.imposition_horizontal_number_value.value()):
+                            image_height.append(int(file_info.split(' ')[2].split('x')[1]))
+
+                        imposition_command = ['convert']
+                        imposition_command.append('-size')
+                        imposition_command.append(str(sum(image_width) + (marksize*2) + (imposition_space * (len(image_width) -1))) + 'x' + str(sum(image_height) + (marksize*2) + (imposition_space * (len(image_height) -1))))
+                        imposition_command.append('xc:white')
+                        imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
+                        subprocess.Popen(imposition_command).wait()
+
+                        last_width = 0
+                        last_height = 0
+                        for width in image_width:
+                            for height in image_height:
+                                imposition_command = ['composite']
+                                imposition_command.append('-geometry')
+                                imposition_command.append('+'  + str(last_width + marksize) + '+' + str(last_height + marksize))
+                                imposition_command.append(dirpathTempFolder + '/result.tiff')
+                                imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
+                                imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
+                                subprocess.Popen(imposition_command).wait()
+                                last_height += height + imposition_space
+                            last_width += width + imposition_space
+                            last_height = 0
+
                         if self.prepress_paper_cutmarks_check.isChecked():
-                            file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
-                            image_width = int(file_info.split(' ')[2].split('x')[0])
-                            image_height = int(file_info.split(' ')[2].split('x')[1])
-                            bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
-                            marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
-                            cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, inkex.unittouu(str(self.prepress_paper_cutmarks_strokewidth_value.text()) + str(self.prepress_paper_cutmarks_strokewidth_choice.currentText())), bleedsize, marksize, dirpathTempFolder)
-                            extent_command = ['convert']
-                            extent_command.append(dirpathTempFolder + '/result.tiff')
-                            extent_command.append('-extent')
-                            extent_command.append(str(image_width + (marksize*2)) + 'x' + str(image_height + (marksize*2)) + '-' + str(marksize) + '-' + str(marksize))
-                            extent_command.append(dirpathTempFolder + '/result.tiff')
-                            subprocess.Popen(extent_command).wait()
+                            cutmarks.generate_final_file(False, self.prepress_paper_cutmarks_inside_check.isChecked(),list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, imposition_space,inkex.unittouu(str(self.prepress_paper_cutmarks_strokewidth_value.text()) + str(self.prepress_paper_cutmarks_strokewidth_choice.currentText())), bleedsize, marksize, dirpathTempFolder)
+
                             cut_marks_command = ['composite']
                             cut_marks_command.append('-compose')
                             cut_marks_command.append('Multiply')
                             cut_marks_command.append('-gravity')
                             cut_marks_command.append('center')
                             cut_marks_command.append(dirpathTempFolder + '/cut_mark.tiff')
-                            cut_marks_command.append(dirpathTempFolder + '/result.tiff')
+                            cut_marks_command.append(dirpathTempFolder + '/result-imp.tiff')
                             cut_marks_command.append(dirpathTempFolder + '/result.tiff')
                             subprocess.Popen(cut_marks_command).wait()
 
@@ -756,7 +833,7 @@ class OutputProBitmap(inkex.Effect):
 
                 image_width = int(file_info.split(' ')[2].split('x')[0])
                 image_height = int(file_info.split(' ')[2].split('x')[1])
-                marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
 
                 for color in ['C', 'M', 'Y', 'K']:
                     if self.prepress_paper_cutmarks_check.isChecked():
@@ -788,7 +865,7 @@ class OutputProBitmap(inkex.Effect):
                 file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
                 if self.prepress_paper_cutmarks_check.isChecked():
-                    marksize = inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                    marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
                     image_size = str(int(int(file_info.split(' ')[2].split('x')[0]) + (marksize*2))) + 'x' + str(int(int(file_info.split(' ')[2].split('x')[1]) + (marksize*2)))
                 else:
                     image_size = file_info.split(' ')[2]
@@ -896,13 +973,8 @@ class OutputProBitmap(inkex.Effect):
                     self.prepress_paper_cutmarks_marksize_label.setEnabled(True)
                     self.prepress_paper_cutmarks_marksize_value.setEnabled(True)
                     self.prepress_paper_cutmarks_marksize_choice.setEnabled(True)
+                    self.prepress_paper_cutmarks_inside_check.setEnabled(True)
 
-                    #file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
-
-                    #image_width = int(file_info.split(' ')[2].split('x')[0])
-                    #image_height = int(file_info.split(' ')[2].split('x')[1])
-
-                    #cutmarks.generate_final_file(False, list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, 2, dirpathTempFolder)
                 else:
                     self.prepress_paper_cutmarks_strokewidth_label.setEnabled(False)
                     self.prepress_paper_cutmarks_strokewidth_value.setEnabled(False)
@@ -913,6 +985,7 @@ class OutputProBitmap(inkex.Effect):
                     self.prepress_paper_cutmarks_marksize_label.setEnabled(False)
                     self.prepress_paper_cutmarks_marksize_value.setEnabled(False)
                     self.prepress_paper_cutmarks_marksize_choice.setEnabled(False)
+                    self.prepress_paper_cutmarks_inside_check.setEnabled(False)
 
                 self.generate_preview()
 

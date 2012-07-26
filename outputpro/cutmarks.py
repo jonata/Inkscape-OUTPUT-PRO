@@ -3,8 +3,9 @@
 
 import subprocess #re, subprocess, simplestyle, os#inkex, os, random, sys, subprocess, shutil
 
-def generate_final_file(isvector, colormode, width, height, strokewidth, bleedsize, marksize, temp_dir):
+def generate_final_file(isvector, hide_inside_marks, colormode, width, height, space, strokewidth, bleedsize, marksize, temp_dir):
     if not isvector:
+
 
         command = []
         final_command = ['convert']
@@ -12,28 +13,52 @@ def generate_final_file(isvector, colormode, width, height, strokewidth, bleedsi
         for color in colormode:
             command.append('convert')
             command.append('-size')
-            command.append(str(width + (marksize*2)) + 'x' + str(height + (marksize*2)))
+            command.append(str(sum(width) + (marksize*2) + (space * (len(width) -1))) + 'x' + str(sum(height) + (marksize*2) + (space * (len(height) -1))))
             command.append('xc:white')
             command.append('-stroke')
             command.append('black')
             command.append('-strokewidth')
             command.append(str(strokewidth))
-            command.append('-draw')
-            command.append('line ' + str(marksize) + ',' + str(marksize + bleedsize) + ', ' + str(0) + ',' + str(marksize + bleedsize))
-            command.append('-draw')
-            command.append('line ' + str(marksize + bleedsize) + ',' + str(marksize) + ', ' + str(marksize + bleedsize) + ',' + str(0))
-            command.append('-draw')
-            command.append('line ' + str(marksize + width - bleedsize) + ',' + str(marksize) + ', ' + str(marksize + width - bleedsize) + ',' + str(0))
-            command.append('-draw')
-            command.append('line ' + str(marksize + width) + ',' + str(marksize + bleedsize) + ', ' + str(width + (marksize*2)) + ',' + str(marksize + bleedsize))
-            command.append('-draw')
-            command.append('line ' + str(marksize + width) + ',' + str(height + marksize - bleedsize) + ', ' + str((marksize*2) + width) + ',' + str(height + marksize - bleedsize))
-            command.append('-draw')
-            command.append('line ' + str(marksize + width - bleedsize) + ',' + str(height + marksize) + ', ' + str(marksize + width - bleedsize) + ',' + str(height + (marksize*2)))
-            command.append('-draw')
-            command.append('line ' + str(marksize + bleedsize) + ',' + str(height + marksize) + ', ' + str(marksize + bleedsize) + ',' + str(height + (marksize*2)))
-            command.append('-draw')
-            command.append('line ' + str(marksize) + ',' + str(height + marksize - bleedsize) + ', ' + str(0) + ',' + str(height - bleedsize + marksize))
+
+            width_value = 0
+            number_of_column = 1
+
+            for column in width:
+                height_value = 0
+                number_of_line = 1
+
+                for line in height:
+
+                    open('/tmp/str.txt', 'a').write(str(width.index(column)))
+
+                    if not hide_inside_marks or (hide_inside_marks and number_of_column == 1):
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + marksize) + ',' + str(height_value + marksize + bleedsize) + ', ' + str(width_value) + ',' + str(height_value + marksize + bleedsize))
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + marksize) + ',' + str(height_value + line + marksize - bleedsize) + ', ' + str(width_value) + ',' + str(height_value + line + marksize - bleedsize))
+
+                    if not hide_inside_marks or (hide_inside_marks and number_of_line == 1):
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + marksize + bleedsize) + ',' + str(height_value + marksize) + ', ' + str(width_value + marksize + bleedsize) + ',' + str(height_value))
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + column + marksize - bleedsize) + ',' + str(height_value + marksize) + ', ' + str(width_value + column + marksize - bleedsize) + ',' + str(height_value))
+
+                    if not hide_inside_marks or (hide_inside_marks and number_of_column == len(width)):
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + marksize + column) + ',' + str(height_value + marksize + bleedsize) + ', ' + str(width_value + (marksize*2) + column) + ',' + str(height_value + marksize + bleedsize))
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + marksize + column) + ',' + str(height_value + line + marksize - bleedsize) + ', ' + str(width_value + (marksize*2) + column) + ',' + str(height_value + marksize + line - bleedsize))
+
+                    if not hide_inside_marks or (hide_inside_marks and number_of_line == len(height)):
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + marksize + bleedsize) + ',' + str(height_value + line + marksize) + ', ' + str(width_value + marksize + bleedsize) + ',' + str(height_value + line + (marksize*2)))
+                        command.append('-draw')
+                        command.append('line ' + str(width_value + column + marksize - bleedsize) + ',' + str(height_value + line + marksize) + ', ' + str(width_value + marksize + column - bleedsize) + ',' + str(height_value + line + (marksize*2)))
+
+                    height_value += line + space
+                    number_of_line += 1
+                width_value += column + space
+                number_of_column += 1
             command.append(temp_dir + '/cut_mark_' + color + '.png')
             subprocess.Popen(command).wait()
             del command[:]

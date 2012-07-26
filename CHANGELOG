@@ -12,3 +12,8 @@ Inkscape OUTPUT PRO Changelog
 - Added bleed size adjustment for cutmarks
 - Added mark size adjustment for cutmarks
 - Added mark stroke width adjustment for cutmarks
+
+26.07.2012
+
+- Fixed dpi value when generating cutmarks
+- Added imposition feature
