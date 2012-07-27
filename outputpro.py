@@ -573,7 +573,7 @@ class OutputProBitmap(inkex.Effect):
                         image_height = int(file_info.split(' ')[2].split('x')[1])#self.imposition_vertical_number_value.value() *
                         #bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
                         marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
-                        imposition_space = inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
+                        imposition_space = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
 
                         file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
 
@@ -670,7 +670,7 @@ class OutputProBitmap(inkex.Effect):
                         file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
                         bleedsize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
                         marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
-                        imposition_space = inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
+                        imposition_space = (self.dpi_choice.value() / 90) *inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
 
                         image_width = []
                         for i in range(self.imposition_vertical_number_value.value()):
