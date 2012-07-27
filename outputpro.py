@@ -223,6 +223,8 @@ class OutputProBitmap(inkex.Effect):
                 self.option_box.addTab(self.general_prepress_panel, _(u"Pré-impressão"))
                 self.option_box.addTab(self.general_imposition_panel, _(u"Imposição"))
 
+                self.option_box.currentChanged.connect(self.generate_preview)
+
                 self.general_options_panel_jpeg = QtGui.QWidget(parent=self.general_options_panel)
                 self.general_options_panel_jpeg.setShown(False)
 
@@ -538,9 +540,6 @@ class OutputProBitmap(inkex.Effect):
                 self.imposition_space_choice.setCurrentIndex(5)
                 self.imposition_space_choice.activated.connect(self.generate_preview)
 
-
-                #self.general_imposition_panel.setEnabled(False)
-
                 self.export_button = QtGui.QPushButton(QtGui.QIcon.fromTheme("document-export"), _("Exportar"), parent=self)
                 self.export_button.setGeometry(740, 560, 200, 30)
                 self.export_button.setIconSize(QtCore.QSize(20,20))
@@ -553,76 +552,93 @@ class OutputProBitmap(inkex.Effect):
                 if self.format_preview_check.isChecked():
                     self.generate_final_file()
 
-                    final_command = ['convert']
-                    final_command.append(dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower())
+                    if self.option_box.currentIndex() == 0:
+                        self.preview_original_title.setVisible(True)
+                        self.preview_result_title.setVisible(True)
 
-                    if self.color_profile_choice_jpeg.isChecked():
+                        final_command = ['convert']
+                        final_command.append(dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower())
 
-                        final_command.append('-profile')
-                        final_command.append('/usr/share/color/icc/' + selected_screen_profile)
+                        if self.color_profile_choice_jpeg.isChecked():
+                            final_command.append('-profile')
+                            final_command.append('/usr/share/color/icc/' + selected_screen_profile)
 
-                    final_command.append(dirpathTempFolder +  '/result.png')
+                        final_command.append(dirpathTempFolder +  '/result.png')
 
-                    subprocess.Popen(final_command).wait()
+                        subprocess.Popen(final_command).wait()
 
+                        file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
-                    file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
+                        image_width = int(file_info.split(' ')[2].split('x')[0])#self.imposition_horizontal_number_value.value() *
+                        image_height = int(file_info.split(' ')[2].split('x')[1])#self.imposition_vertical_number_value.value() *
+                        #bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
+                        marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                        imposition_space = inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
 
-                    image_width = int(file_info.split(' ')[2].split('x')[0])
-                    image_height = int(file_info.split(' ')[2].split('x')[1])
-                    #bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
-                    marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                        file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
 
-                    file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
+                        file_info_final = ''
+                        for line in file_info.split('\n'):
+                            if '  Format: ' in line:
+                                file_info_final += 'Formato da imagem: <strong>' + line.replace('  Format: ', '') + '</strong><br>'
+                            if '  Geometry: ' in line:
+                                file_info_final += 'Largura e altura: <strong>' + line.replace('  Geometry: ', '').split('+')[0] + '</strong><br>'
+                            if '  Resolution: ' in line:
+                                file_info_final += 'Resolução: <strong>' + line.replace('  Resolution: ', '')
+                            if '  Units: ' in line:
+                                file_info_final += ' ' + line.replace('  Units: ', '').replace('Per', ' por ').replace('Pixels', 'pixels').replace('Centimeter', 'centímetro').replace('Inch', 'polegada') + '</strong><br>'
+                            if '  Colorspace: ' in line:
+                                file_info_final += 'Modo de cores: <strong>' + line.replace('  Colorspace: ', '') + '</strong><br>'
+                            if '  Depth: ' in line:
+                                file_info_final += 'Profundidade: <strong>' + line.replace('  Depth: ', '') + '</strong><br>'
+                            if '  Quality: ' in line:
+                                file_info_final += 'Qualidade: <strong>' + line.replace('  Quality: ', '') + '%</strong><br>'
+                            if '  Filesize: ' in line:
+                                file_info_final += 'Tamanho do arquivo: <strong>' + line.replace('  Filesize: ', '') + '</strong><br>'
+                            if '    jpeg:sampling-factor: ' in line:
+                                file_info_final += 'Amostragem: <strong>' + line.replace('    jpeg:sampling-factor: ', '') + '</strong><br>'
 
-                    file_info_final = ''
-                    for line in file_info.split('\n'):
-                        if '  Format: ' in line:
-                            file_info_final += 'Formato da imagem: <strong>' + line.replace('  Format: ', '') + '</strong><br>'
-                        if '  Geometry: ' in line:
-                            file_info_final += 'Largura e altura: <strong>' + line.replace('  Geometry: ', '').split('+')[0] + '</strong><br>'
-                        if '  Resolution: ' in line:
-                            file_info_final += 'Resolução: <strong>' + line.replace('  Resolution: ', '')
-                        if '  Units: ' in line:
-                            file_info_final += ' ' + line.replace('  Units: ', '').replace('Per', ' por ').replace('Pixels', 'pixels').replace('Centimeter', 'centímetro').replace('Inch', 'polegada') + '</strong><br>'
-                        if '  Colorspace: ' in line:
-                            file_info_final += 'Modo de cores: <strong>' + line.replace('  Colorspace: ', '') + '</strong><br>'
-                        if '  Depth: ' in line:
-                            file_info_final += 'Profundidade: <strong>' + line.replace('  Depth: ', '') + '</strong><br>'
-                        if '  Quality: ' in line:
-                            file_info_final += 'Qualidade: <strong>' + line.replace('  Quality: ', '') + '%</strong><br>'
-                        if '  Filesize: ' in line:
-                            file_info_final += 'Tamanho do arquivo: <strong>' + line.replace('  Filesize: ', '') + '</strong><br>'
-                        if '    jpeg:sampling-factor: ' in line:
-                            file_info_final += 'Amostragem: <strong>' + line.replace('    jpeg:sampling-factor: ', '') + '</strong><br>'
+                        if self.prepress_paper_cutmarks_check.isChecked():
+                            margin = marksize
+                        else:
+                            margin = imposition_space
 
-                    if self.prepress_paper_cutmarks_check.isChecked():
-                        margin = marksize
-                    else:
-                        margin = 0
+                        if image_width < 300 or image_height < 300:
+                            what_show = '-extent ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '-' + str(int(150 * self.preview_zoom) - int(image_width / 2)) + '-' + str(int(150 * self.preview_zoom) - int(image_height / 2))
+                        else:
+                            what_show = '-crop ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '+' + str(int(image_width / 2) - int(150 * self.preview_zoom)) + '+' + str(int(image_height / 2) - int(150 * self.preview_zoom))
 
-                    if image_width < 300 or image_height < 300:
-                        what_show = '-extent ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '-' + str(int(150 * self.preview_zoom) - int(image_width / 2)) + '-' + str(int(150 * self.preview_zoom) - int(image_height / 2))
-                    else:
-                        what_show = '-crop ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '+' + str(int(image_width / 2) - int(150 * self.preview_zoom)) + '+' + str(int(image_height / 2) - int(150 * self.preview_zoom))
+                        os.system('convert "' + dirpathTempFolder +  '/source.png" ' + what_show + ' "' + dirpathTempFolder +  '/original.png"' )
 
-                    os.system('convert "' + dirpathTempFolder +  '/source.png" ' + what_show + ' "' + dirpathTempFolder +  '/original.png"' )
+                        if image_width < 300 or image_height < 300:
+                            what_show = '-extent ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '-' + str(int(150 * self.preview_zoom) - int(image_width / 2) - margin) + '-' + str(int(150 * self.preview_zoom) - int(image_height / 2) - margin)
+                        else:
+                            what_show = '-crop ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '+' + str(int(image_width / 2) - int(150 * self.preview_zoom) + margin) + '+' + str(int(image_height / 2) - int(150 * self.preview_zoom) + margin)
 
-                    if image_width < 300 or image_height < 300:
-                        what_show = '-extent ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '-' + str(int(150 * self.preview_zoom) - int(image_width / 2) - margin) + '-' + str(int(150 * self.preview_zoom) - int(image_height / 2) - margin)
-                    else:
-                        what_show = '-crop ' + str(int(300 * self.preview_zoom)) + 'x' + str(int(300 * self.preview_zoom)) + '+' + str(int(image_width / 2) - int(150 * self.preview_zoom) + margin) + '+' + str(int(image_height / 2) - int(150 * self.preview_zoom) + margin)
+                        os.system('convert "' + dirpathTempFolder +  '/result.png" ' + what_show + ' "' + dirpathTempFolder +  '/result.png"' )
 
-                    os.system('convert "' + dirpathTempFolder +  '/result.png" ' + what_show + ' "' + dirpathTempFolder +  '/result.png"' )
+                        if not self.preview_zoom == 1:
+                            os.system('convert "' + dirpathTempFolder +  '/original.png" -filter box -resize 300x300 "' + dirpathTempFolder +  '/original.png"' )
+                            os.system('convert "' + dirpathTempFolder +  '/result.png" -filter box -resize 300x300 "' + dirpathTempFolder +  '/result.png"' )
 
-                    if not self.preview_zoom == 1:
-                        os.system('convert "' + dirpathTempFolder +  '/original.png" -filter box -resize 300x300 "' + dirpathTempFolder +  '/original.png"' )
-                        os.system('convert "' + dirpathTempFolder +  '/result.png" -filter box -resize 300x300 "' + dirpathTempFolder +  '/result.png"' )
+                        os.system('convert "' + dirpathTempFolder +  '/original.png" "' + dirpathTempFolder +  '/result.png" "' + dirpathSoftware + '/preview_mask.png" -composite "' + dirpathTempFolder +  '/preview.png"' )
+                        #self.preview_bitmap.setPixmap(QtGui.QPixmap(os.path.join(dirpathTempFolder, 'preview.png')))
 
-                    os.system('convert "' + dirpathTempFolder +  '/original.png" "' + dirpathTempFolder +  '/result.png" "' + dirpathSoftware + '/preview_mask.png" -composite "' + dirpathTempFolder +  '/preview.png"' )
+                        self.view_image_info.setText(unicode(file_info_final + '<br><small>' + list_of_format_tips[list_of_export_formats[self.format_choice.currentIndex()]] + '</small>', 'utf-8'))
+
+                    elif self.option_box.currentIndex() == 1:
+                        self.preview_original_title.setVisible(False)
+                        self.preview_result_title.setVisible(False)
+
+                        subprocess.Popen(['convert', dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower(), '-resize', '300x300', os.path.join(dirpathTempFolder, 'preview.png')]).wait()
+
+                    elif self.option_box.currentIndex() == 2:
+                        None
+
+                    elif self.option_box.currentIndex() == 3:
+                        None
+
                     self.preview_bitmap.setPixmap(QtGui.QPixmap(os.path.join(dirpathTempFolder, 'preview.png')))
-
-                    self.view_image_info.setText(unicode(file_info_final + '<br><small>' + list_of_format_tips[list_of_export_formats[self.format_choice.currentIndex()]] + '</small>', 'utf-8'))
 
             def generate_final_file(self):
                 if list_of_export_formats[self.format_choice.currentIndex()] == 'JPEG':
@@ -698,6 +714,9 @@ class OutputProBitmap(inkex.Effect):
                             cut_marks_command.append(dirpathTempFolder + '/result-imp.tiff')
                             cut_marks_command.append(dirpathTempFolder + '/result.tiff')
                             subprocess.Popen(cut_marks_command).wait()
+
+                        else:
+                            subprocess.Popen(['mv', dirpathTempFolder + '/result-imp.tiff', dirpathTempFolder + '/result.tiff']).wait()
 
                     else:
                         if self.color_profile_choice_jpeg.isChecked():
