@@ -557,7 +557,7 @@ class OutputProBitmap(inkex.Effect):
                         self.preview_result_title.setVisible(True)
 
                         final_command = ['convert']
-                        final_command.append(dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower())
+                        final_command.append(dirpathTempFolder +  '/result-imp.' + list_of_export_formats[self.format_choice.currentIndex()].lower())
 
                         if self.color_profile_choice_jpeg.isChecked():
                             final_command.append('-profile')
@@ -569,13 +569,13 @@ class OutputProBitmap(inkex.Effect):
 
                         file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
-                        image_width = int(file_info.split(' ')[2].split('x')[0])#self.imposition_horizontal_number_value.value() *
-                        image_height = int(file_info.split(' ')[2].split('x')[1])#self.imposition_vertical_number_value.value() *
-                        #bleedsize = inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
+                        image_width = int(file_info.split(' ')[2].split('x')[0])
+                        image_height = int(file_info.split(' ')[2].split('x')[1])
+
                         marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
                         imposition_space = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
 
-                        file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
+                        file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result-imp.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
 
                         file_info_final = ''
                         for line in file_info.split('\n'):
@@ -622,7 +622,6 @@ class OutputProBitmap(inkex.Effect):
                             os.system('convert "' + dirpathTempFolder +  '/result.png" -filter box -resize 300x300 "' + dirpathTempFolder +  '/result.png"' )
 
                         os.system('convert "' + dirpathTempFolder +  '/original.png" "' + dirpathTempFolder +  '/result.png" "' + dirpathSoftware + '/preview_mask.png" -composite "' + dirpathTempFolder +  '/preview.png"' )
-                        #self.preview_bitmap.setPixmap(QtGui.QPixmap(os.path.join(dirpathTempFolder, 'preview.png')))
 
                         self.view_image_info.setText(unicode(file_info_final + '<br><small>' + list_of_format_tips[list_of_export_formats[self.format_choice.currentIndex()]] + '</small>', 'utf-8'))
 
@@ -630,7 +629,7 @@ class OutputProBitmap(inkex.Effect):
                         self.preview_original_title.setVisible(False)
                         self.preview_result_title.setVisible(False)
 
-                        subprocess.Popen(['convert', dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower(), '-resize', '300x300', os.path.join(dirpathTempFolder, 'preview.png')]).wait()
+                        subprocess.Popen(['convert', dirpathTempFolder +  '/result-imp.' + list_of_export_formats[self.format_choice.currentIndex()].lower(), '-resize', '300x300', os.path.join(dirpathTempFolder, 'preview.png')]).wait()
 
                     elif self.option_box.currentIndex() == 2:
                         None
@@ -667,57 +666,6 @@ class OutputProBitmap(inkex.Effect):
                         pre_command.append(dirpathTempFolder +  '/result.tiff')
                         subprocess.Popen(pre_command).wait()
 
-                        file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
-                        bleedsize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
-                        marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
-                        imposition_space = (self.dpi_choice.value() / 90) *inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
-
-                        image_width = []
-                        for i in range(self.imposition_vertical_number_value.value()):
-                            image_width.append(int(file_info.split(' ')[2].split('x')[0]))
-
-                        image_height = []
-                        for i in range(self.imposition_horizontal_number_value.value()):
-                            image_height.append(int(file_info.split(' ')[2].split('x')[1]))
-
-                        imposition_command = ['convert']
-                        imposition_command.append('-size')
-                        imposition_command.append(str(sum(image_width) + (marksize*2) + (imposition_space * (len(image_width) -1))) + 'x' + str(sum(image_height) + (marksize*2) + (imposition_space * (len(image_height) -1))))
-                        imposition_command.append('xc:white')
-                        imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
-                        subprocess.Popen(imposition_command).wait()
-
-                        last_width = 0
-                        last_height = 0
-                        for width in image_width:
-                            for height in image_height:
-                                imposition_command = ['composite']
-                                imposition_command.append('-geometry')
-                                imposition_command.append('+'  + str(last_width + marksize) + '+' + str(last_height + marksize))
-                                imposition_command.append(dirpathTempFolder + '/result.tiff')
-                                imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
-                                imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
-                                subprocess.Popen(imposition_command).wait()
-                                last_height += height + imposition_space
-                            last_width += width + imposition_space
-                            last_height = 0
-
-                        if self.prepress_paper_cutmarks_check.isChecked():
-                            cutmarks.generate_final_file(False, self.prepress_paper_cutmarks_inside_check.isChecked(),list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, imposition_space,inkex.unittouu(str(self.prepress_paper_cutmarks_strokewidth_value.text()) + str(self.prepress_paper_cutmarks_strokewidth_choice.currentText())), bleedsize, marksize, dirpathTempFolder)
-
-                            cut_marks_command = ['composite']
-                            cut_marks_command.append('-compose')
-                            cut_marks_command.append('Multiply')
-                            cut_marks_command.append('-gravity')
-                            cut_marks_command.append('center')
-                            cut_marks_command.append(dirpathTempFolder + '/cut_mark.tiff')
-                            cut_marks_command.append(dirpathTempFolder + '/result-imp.tiff')
-                            cut_marks_command.append(dirpathTempFolder + '/result.tiff')
-                            subprocess.Popen(cut_marks_command).wait()
-
-                        else:
-                            subprocess.Popen(['mv', dirpathTempFolder + '/result-imp.tiff', dirpathTempFolder + '/result.tiff']).wait()
-
                     else:
                         if self.color_profile_choice_jpeg.isChecked():
                             pre_command = ['convert']
@@ -727,7 +675,65 @@ class OutputProBitmap(inkex.Effect):
                             pre_command.append(dirpathTempFolder +  '/result.tiff')
                             subprocess.Popen(pre_command).wait()
 
-                    jpeg_command.append(dirpathTempFolder +  '/result.tiff')
+                    file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
+
+                    if self.prepress_paper_cutmarks_check.isChecked():
+                        bleedsize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
+                        marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                    else:
+                        bleedsize = 0
+                        marksize = 0
+
+                    imposition_space = (self.dpi_choice.value() / 90) *inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
+
+                    image_width = []
+                    for i in range(self.imposition_vertical_number_value.value()):
+                        image_width.append(int(file_info.split(' ')[2].split('x')[0]))
+
+                    image_height = []
+                    for i in range(self.imposition_horizontal_number_value.value()):
+                        image_height.append(int(file_info.split(' ')[2].split('x')[1]))
+
+                    imposition_command = ['convert']
+                    imposition_command.append(dirpathTempFolder + '/result.tiff')
+                    imposition_command.append('-extent')
+                    imposition_command.append(str(sum(image_width) + (marksize*2) + (imposition_space * (len(image_width) -1))) + 'x' + str(sum(image_height) + (marksize*2) + (imposition_space * (len(image_height) -1))) + '-' + str(marksize) + '-' + str(marksize))
+                    imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
+                    subprocess.Popen(imposition_command).wait()
+
+                    last_width = 0
+                    last_height = 0
+                    last_marksize = marksize
+                    for width in image_width:
+                        for height in image_height:
+                            if not (last_width == 0 and last_height == 0):
+                                imposition_command = ['composite']
+                                imposition_command.append('-geometry')
+                                imposition_command.append('+'  + str(last_width + marksize) + '+' + str(last_height + marksize))
+                                imposition_command.append(dirpathTempFolder + '/result.tiff')
+                                imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
+                                imposition_command.append(dirpathTempFolder + '/result-imp.tiff')
+                                subprocess.Popen(imposition_command).wait()
+
+                            last_height += height + imposition_space
+                            last_marksize = 0
+                        last_width += width + imposition_space
+                        last_height = 0
+
+                    if self.prepress_paper_cutmarks_check.isChecked():
+                        cutmarks.generate_final_file(False, self.prepress_paper_cutmarks_inside_check.isChecked(),list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, imposition_space,inkex.unittouu(str(self.prepress_paper_cutmarks_strokewidth_value.text()) + str(self.prepress_paper_cutmarks_strokewidth_choice.currentText())), bleedsize, marksize, dirpathTempFolder)
+
+                        cut_marks_command = ['composite']
+                        cut_marks_command.append('-compose')
+                        cut_marks_command.append('Multiply')
+                        cut_marks_command.append('-gravity')
+                        cut_marks_command.append('center')
+                        cut_marks_command.append(dirpathTempFolder + '/cut_mark.tiff')
+                        cut_marks_command.append(dirpathTempFolder + '/result-imp.tiff')
+                        cut_marks_command.append(dirpathTempFolder + '/result-imp.tiff')
+                        subprocess.Popen(cut_marks_command).wait()
+
+                    jpeg_command.append(dirpathTempFolder +  '/result-imp.tiff')
 
                     if self.prepress_paper_settings_invert.isChecked():
                         jpeg_command.append('-negate')
@@ -760,7 +766,7 @@ class OutputProBitmap(inkex.Effect):
                     jpeg_command.append('-define')
                     jpeg_command.append('jpeg:dct-method=' + list_of_dct_jpeg[unicode(self.jpeg_dct_choice_jpeg.currentText(), 'utf-8')])
 
-                    jpeg_command.append(dirpathTempFolder +  '/result.jpeg')
+                    jpeg_command.append(dirpathTempFolder +  '/result-imp.jpeg')
 
                     subprocess.Popen(jpeg_command).wait()
 
@@ -848,33 +854,8 @@ class OutputProBitmap(inkex.Effect):
                 area_to_export = self.area_to_export()
                 cmyk.generate_png_separations(dirpathTempFolder + '/', self.area_to_export(), self.dpi_choice.value(), False)
 
-                file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
-
-                image_width = int(file_info.split(' ')[2].split('x')[0])
-                image_height = int(file_info.split(' ')[2].split('x')[1])
-                marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
-
                 for color in ['C', 'M', 'Y', 'K']:
-                    if self.prepress_paper_cutmarks_check.isChecked():
-                        extent_command = ['convert']
-                        extent_command.append(dirpathTempFolder + "/separated" + area_to_export.replace(' ', '') + color + ".png")
-                        extent_command.append('-extent')
-                        extent_command.append(str(image_width + (marksize*2)) + 'x' + str(image_height + (marksize*2)) + '-' + str(marksize) + '-' + str(marksize))
-                        extent_command.append(dirpathTempFolder +  "/separated" + area_to_export.replace(' ', '') + color + ".png")
-                        subprocess.Popen(extent_command).wait()
-
                     subprocess.Popen(['convert', dirpathTempFolder + '/' + "separated" + area_to_export.replace(' ', '') + color + ".png", '-colorspace', 'CMYK', '-channel', color, '-separate', dirpathTempFolder + '/' + "separated" + area_to_export.replace(' ', '') + color + ".png"]).wait()
-
-                    if self.prepress_paper_cutmarks_check.isChecked():
-                        cut_marks_command = ['composite']
-                        cut_marks_command.append('-compose')
-                        cut_marks_command.append('Screen')
-                        cut_marks_command.append('-gravity')
-                        cut_marks_command.append('center')
-                        cut_marks_command.append(dirpathTempFolder + "/cut_mark_" + color + ".png")
-                        cut_marks_command.append(dirpathTempFolder + "/separated" + area_to_export.replace(' ', '') + color + ".png")
-                        cut_marks_command.append(dirpathTempFolder + "/separated" + area_to_export.replace(' ', '') + color + ".png")
-                        subprocess.Popen(cut_marks_command).wait()
 
                 self.cmyk_advanced_manipulation_view_separations()
 
@@ -883,11 +864,7 @@ class OutputProBitmap(inkex.Effect):
 
                 file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
-                if self.prepress_paper_cutmarks_check.isChecked():
-                    marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
-                    image_size = str(int(int(file_info.split(' ')[2].split('x')[0]) + (marksize*2))) + 'x' + str(int(int(file_info.split(' ')[2].split('x')[1]) + (marksize*2)))
-                else:
-                    image_size = file_info.split(' ')[2]
+                image_size = file_info.split(' ')[2]
 
                 subprocess.Popen(['convert', '-size', image_size, 'xc:black', dirpathTempFolder +  '/empty.png']).wait()
 
@@ -1039,7 +1016,7 @@ class OutputProBitmap(inkex.Effect):
                     self.generate_final_file()
 
                 if not str(self.location_path) == '':
-                    shutil.copy2(dirpathTempFolder +  '/result.' + list_of_export_formats[self.format_choice.currentIndex()].lower(), self.location_path)
+                    shutil.copy2(dirpathTempFolder +  '/result-imp.' + list_of_export_formats[self.format_choice.currentIndex()].lower(), self.location_path)
 
 
 
