@@ -78,3 +78,5 @@ def generate_final_file(isvector, hide_inside_marks, colormode, width, height, s
 
         final_command.extend(['-set', 'colorspace', colormode, '-combine', temp_dir + '/cut_mark.tiff'])
         subprocess.Popen(final_command).wait()
+    
+    

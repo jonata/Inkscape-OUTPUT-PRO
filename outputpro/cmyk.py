@@ -110,3 +110,6 @@ def generate_png_separations(temp_dir, area_to_export, resolution, alpha):
 
     inkscape_exec = subprocess.Popen(['inkscape -z --shell'], shell=True, stdout=open(os.devnull, 'w'), stderr=open(os.devnull, 'w'), stdin=subprocess.PIPE)
     inkscape_exec.communicate(input=string_inkscape_exec)
+
+
+

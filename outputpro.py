@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import inkex, os, random, sys, subprocess, shutil
+import inkex, re, os, random, sys, subprocess, shutil
 
 from outputpro import cmyk, cutmarks
 
@@ -26,20 +26,39 @@ dirpathSoftware = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'outp
 inkscape_config = open(os.getenv("HOME") + '/.config/inkscape/preferences.xml', 'r').read()
 
 list_of_export_formats = ['JPEG']
-list_of_format_tips = {'JPEG':'O formato de imagem JPEG sempre perde qualidade devido ao método de compressão. Embora suporte o modo de cores CMYK, não é recomendado para uso em gráfica impressa.'}
+list_of_format_tips = {'JPEG':'The JPEG format always has some loss of quality. Although it supports CMYK, it is not recommended for use in printed graphics.'}
 list_of_color_modes_jpeg = ['CMYK','RGB','Gray','CMY','HSB','HSL','HWB','Lab','Log', 'OHTA','Rec601Luma','Rec601YCbCr','Rec709Luma','Rec709YCbCr','sRGB','XYZ','YCbCr','YCC','YIQ','YPbPr','YUV']
-list_of_interlacing_jpeg = {u'Nenhum':'none', u'Linha':'line', u'Plano':'plane', u'Particionamento':'partition'}
-list_of_noise_jpeg = {u'Gaussiano':'Gaussian-noise', u'Impulso':'Impulse-noise', u'Laplace':'Laplacian-noise', u'Multiplicativo':'Multiplicative-noise', u'Peixe':'Poisson-noise', u'Uniforme':'Uniform-noise'}
+list_of_interlacing_jpeg = {u'None':'none', u'Line':'line', u'Plane':'plane', u'Partition':'partition'}
+list_of_noise_jpeg = {u'Gaussian':'Gaussian-noise', u'Impulse':'Impulse-noise', u'Laplacian':'Laplacian-noise', u'Multiplicative':'Multiplicative-noise', u'Poisson':'Poisson-noise', u'Uniform':'Uniform-noise'}
 list_of_subsampling_jpeg = ['1x1, 1x1, 1x1', '2x1, 1x1, 1x1', '1x2, 1x1, 1x1', '2x2, 1x1, 1x1']
-list_of_dct_jpeg = {u'Inteiro':'int', u'Inteiro rápido':'fast', u'Ponto flutuante':'float'}
-list_of_area_to_export = [_(u"Página"), _(u"Desenho"), _(u"Objeto")]#,  _(u"Área definida")]
+list_of_dct_jpeg = {u'Integer':'int', u'Integer (fast)':'fast', u'Floating point':'float'}
+list_of_area_to_export = [_(u"Page"), _(u"Drawing"), _(u"Object")]#,  _(u"Área definida")]
 list_of_profiles = os.listdir('/usr/share/color/icc/')
+uuconv = {'in':90.0, 'pt':1.25, 'px':1, 'mm':3.5433070866, 'cm':35.433070866, 'pc':15.0}
 
 selected_screen_profile = inkscape_config.split('id="displayprofile"')[1].split('uri="')[1].split('" />')[0].split('/')[-1]
 selected_print_profile = inkscape_config.split('id="softproof"')[1].split('uri="')[1].split('" />')[0].split('/')[-1]
 
 rgb_profile = '"' + inkscape_config.split('id="displayprofile"')[1].split('uri="')[1].split('" />')[0] + '"'
 #cmyk_profile = '"' + inkscape_config.split('id="softproof"')[1].split('uri="')[1].split('" />')[0] + '"'
+
+def unittouu(string):
+    '''Returns userunits given a string representation of units in another system'''
+    unit = re.compile('(%s)$' % '|'.join(uuconv.keys()))
+    param = re.compile(r'(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)')
+
+    p = param.match(string)
+    u = unit.search(string)    
+    if p:
+        retval = float(p.string[p.start():p.end()])
+    else:
+        retval = 0.0
+    if u:
+        try:
+            return retval * uuconv[u.string[u.start():u.end()]]
+        except KeyError:
+            pass
+    return retval
 
 class OutputProBitmap(inkex.Effect):
     def __init__(self):
@@ -87,8 +106,8 @@ class OutputProBitmap(inkex.Effect):
         open(dirpathTempFolder +  "/original.svg", 'w').write(self.code)
 
         svg = self.document.getroot()
-        page_width  = inkex.unittouu(svg.get('width'))
-        page_height = inkex.unittouu(svg.attrib['height'])
+        page_width  = unittouu(svg.get('width'))
+        page_height = unittouu(svg.attrib['height'])
 
         class mainWindow(QtGui.QWidget):
             def __init__(self, parent=None):
@@ -96,7 +115,7 @@ class OutputProBitmap(inkex.Effect):
                 self.resize(950, 600)
                 self.setMaximumSize(QtCore.QSize(950, 600))
                 self.setMinimumSize(QtCore.QSize(950, 600))
-                self.setWindowTitle(_(u'Inkscape OUTPUT PRO Bitmap'))
+                self.setWindowTitle(_(u'Inkscape Output Pro Bitmap'))
                 self.setWindowIcon(QtGui.QIcon('/usr/share/pixmaps/inkscape-outputpro.png'))
                 self.move((QtGui.QDesktopWidget().screenGeometry().width()-self.geometry().width())/2, (QtGui.QDesktopWidget().screenGeometry().height()-self.geometry().height())/2)
 
@@ -122,7 +141,7 @@ class OutputProBitmap(inkex.Effect):
                 self.preview_original_title.setStyleSheet('QFrame{font:6pt;border-radius: 2px;padding: 2px;background-color:rgba(0,0,0,128);color:white}')
 
                 self.preview_result_title = QtGui.QLabel(parent=self.preview_panel)
-                self.preview_result_title.setText(_(u"Resultado").upper())
+                self.preview_result_title.setText(_(u"Result").upper())
                 self.preview_result_title.setGeometry(15, 75, 50, 10)
                 self.preview_result_title.setAlignment(QtCore.Qt.AlignCenter)
                 self.preview_result_title.setStyleSheet('QFrame{font:6pt;border-radius: 2px;padding: 2px;background-color:rgba(0,0,0,128);color:white}')
@@ -196,7 +215,7 @@ class OutputProBitmap(inkex.Effect):
                 #self.main_title.setForegroundRole(QtGui.QPalette.ColorRole(2))
 
                 self.format_title = QtGui.QLabel(parent=self)
-                self.format_title.setText(_(u"Formato").upper())
+                self.format_title.setText(_(u"Format").upper())
                 self.format_title.setGeometry(320, 70, 200, 15)
                 self.format_title.setFont(QtGui.QFont('Ubuntu', 8, 75))
 
@@ -207,7 +226,7 @@ class OutputProBitmap(inkex.Effect):
 
                 self.format_preview_check = QtGui.QCheckBox(parent=self)
                 self.format_preview_check.setGeometry(540, 85, 200, 25)
-                self.format_preview_check.setText(_(u"Previsualizar"))
+                self.format_preview_check.setText(_(u"Preview"))
                 self.format_preview_check.setChecked(True)
                 self.format_preview_check.clicked.connect(self.format_preview_change)
 
@@ -218,10 +237,10 @@ class OutputProBitmap(inkex.Effect):
                 self.general_geometry_panel = QtGui.QWidget(parent=self)
                 self.general_prepress_panel = QtGui.QWidget(parent=self)
                 self.general_imposition_panel = QtGui.QWidget(parent=self)
-                self.option_box.addTab(self.general_options_panel, _(u"Opções"))
-                self.option_box.addTab(self.general_geometry_panel, _(u"Tamanho"))
-                self.option_box.addTab(self.general_prepress_panel, _(u"Pré-impressão"))
-                self.option_box.addTab(self.general_imposition_panel, _(u"Imposição"))
+                self.option_box.addTab(self.general_options_panel, _(u"Options"))
+                self.option_box.addTab(self.general_geometry_panel, _(u"Size"))
+                self.option_box.addTab(self.general_prepress_panel, _(u"Prepress"))
+                self.option_box.addTab(self.general_imposition_panel, _(u"Imposition"))
 
                 self.option_box.currentChanged.connect(self.generate_preview)
 
@@ -229,7 +248,7 @@ class OutputProBitmap(inkex.Effect):
                 self.general_options_panel_jpeg.setShown(False)
 
                 self.color_mode_title_jpeg = QtGui.QLabel(parent=self.general_options_panel_jpeg)
-                self.color_mode_title_jpeg.setText(_(u"Modo de cores").upper())
+                self.color_mode_title_jpeg.setText(_(u"Color mode").upper())
                 self.color_mode_title_jpeg.setGeometry(10, 10, 260, 15)
                 self.color_mode_title_jpeg.setFont(QtGui.QFont('Ubuntu', 8))
 
@@ -244,7 +263,7 @@ class OutputProBitmap(inkex.Effect):
                 #self.color_mode_title_tip.setAlignment(QtCore.Qt.AlignLeft)
 
                 self.quality_title_jpeg = QtGui.QLabel(parent=self.general_options_panel_jpeg)
-                self.quality_title_jpeg.setText(_(u"Qualidade").upper())
+                self.quality_title_jpeg.setText(_(u"Quality").upper())
                 self.quality_title_jpeg.setGeometry(285, 10, 100, 15)
                 self.quality_title_jpeg.setFont(QtGui.QFont('Ubuntu', 8))
 
@@ -255,13 +274,13 @@ class OutputProBitmap(inkex.Effect):
                 self.quality_percent_title_jpeg.setAlignment(QtCore.Qt.AlignRight)
 
                 self.quality_percent_title_left_jpeg = QtGui.QLabel(parent=self.general_options_panel_jpeg)
-                self.quality_percent_title_left_jpeg.setText('Menos qualidade\nMenor tamanho de arquivo')
+                self.quality_percent_title_left_jpeg.setText('Lower quality\nSmaller file')
                 self.quality_percent_title_left_jpeg.setGeometry(285, 40, 160, 25)
                 self.quality_percent_title_left_jpeg.setFont(QtGui.QFont('Ubuntu', 7))
                 self.quality_percent_title_left_jpeg.setAlignment(QtCore.Qt.AlignLeft)
 
                 self.quality_percent_title_right_jpeg = QtGui.QLabel(parent=self.general_options_panel_jpeg)
-                self.quality_percent_title_right_jpeg.setText('Mais qualidade<br>Maior tamanho de arquivo')
+                self.quality_percent_title_right_jpeg.setText('Higher quality<br>Larger file')
                 self.quality_percent_title_right_jpeg.setGeometry(445, 40, 160, 25)
                 self.quality_percent_title_right_jpeg.setFont(QtGui.QFont('Ubuntu', 7))
                 self.quality_percent_title_right_jpeg.setAlignment(QtCore.Qt.AlignRight)
@@ -274,7 +293,7 @@ class OutputProBitmap(inkex.Effect):
                 self.quality_choice_dial_jpeg.sliderReleased.connect(self.generate_preview)
                 self.quality_choice_dial_jpeg.valueChanged.connect(self.change_quality_live_jpeg)
 
-                self.color_profile_choice_jpeg = QtGui.QCheckBox(_(u"Usar perfil de cores do Inkscape"), parent=self.general_options_panel_jpeg)
+                self.color_profile_choice_jpeg = QtGui.QCheckBox(_(u"Use Inkscape color profile"), parent=self.general_options_panel_jpeg)
                 self.color_profile_choice_jpeg.setChecked(False)
                 self.color_profile_choice_jpeg.setGeometry(283, 150, 325, 25)
                 self.color_profile_choice_jpeg.clicked.connect(self.generate_preview)
@@ -288,11 +307,11 @@ class OutputProBitmap(inkex.Effect):
                 if selected_print_profile == '':
                     self.document_color_profile_title_jpeg.setEnabled(False)
                     self.color_profile_choice_jpeg.setEnabled(False)
-                    self.document_color_profile_title_jpeg.setText(_(u"Esse documento não está utilizando um perfil de cor."))
+                    self.document_color_profile_title_jpeg.setText(_(u"This document is not using a color profile."))
                 else:
-                    self.document_color_profile_title_jpeg.setText(_(u"O perfil que o Inkscape está utilizando é") + ' ' + selected_print_profile[:-4])
+                    self.document_color_profile_title_jpeg.setText(_(u"The profile used by Inkscape is") + ' ' + selected_print_profile[:-4])
 
-                self.jpeg_interlace_option_jpeg = QtGui.QCheckBox(_(u"Entrelaçar"), parent=self.general_options_panel_jpeg)
+                self.jpeg_interlace_option_jpeg = QtGui.QCheckBox(_(u"Interlace"), parent=self.general_options_panel_jpeg)
                 self.jpeg_interlace_option_jpeg.setGeometry(10, 80, 120, 25)
                 self.jpeg_interlace_option_jpeg.toggled.connect(self.jpeg_interlace_click_jpeg)
 
@@ -303,11 +322,11 @@ class OutputProBitmap(inkex.Effect):
                 self.jpeg_interlace_choice_jpeg.setEnabled(False)
                 self.jpeg_interlace_choice_jpeg.activated.connect(self.generate_preview)
 
-                self.jpeg_optimize_option_jpeg = QtGui.QCheckBox(_(u"Otimizar"), parent=self.general_options_panel_jpeg)
+                self.jpeg_optimize_option_jpeg = QtGui.QCheckBox(_(u"Optimize"), parent=self.general_options_panel_jpeg)
                 self.jpeg_optimize_option_jpeg.setGeometry(10, 115, 260, 25)
                 self.jpeg_optimize_option_jpeg.setChecked(True)
 
-                self.jpeg_noise_option_jpeg = QtGui.QCheckBox(_(u"Ruído"), parent=self.general_options_panel_jpeg)
+                self.jpeg_noise_option_jpeg = QtGui.QCheckBox(_(u"Noise"), parent=self.general_options_panel_jpeg)
                 self.jpeg_noise_option_jpeg.setGeometry(10, 150, 120, 25)
                 self.jpeg_noise_option_jpeg.toggled.connect(self.jpeg_noise_click_jpeg)
 
@@ -326,7 +345,7 @@ class OutputProBitmap(inkex.Effect):
                 self.jpeg_noise_ammount_jpeg.sliderReleased.connect(self.generate_preview)
 
                 self.jpeg_subsampling_option_jpeg = QtGui.QLabel(parent=self.general_options_panel_jpeg)
-                self.jpeg_subsampling_option_jpeg.setText(_(u"Sub-amostragem"))
+                self.jpeg_subsampling_option_jpeg.setText(_(u"Sub-sampling"))
                 self.jpeg_subsampling_option_jpeg.setGeometry(10, 210, 140, 25)
 
                 self.jpeg_subsampling_choice_jpeg = QtGui.QComboBox(parent=self.general_options_panel_jpeg)
@@ -336,7 +355,7 @@ class OutputProBitmap(inkex.Effect):
                 self.jpeg_subsampling_choice_jpeg.activated.connect(self.generate_preview)
 
                 self.jpeg_dct_option_jpeg = QtGui.QLabel(parent=self.general_options_panel_jpeg)
-                self.jpeg_dct_option_jpeg.setText(_(u"Método DCT"))
+                self.jpeg_dct_option_jpeg.setText(_(u"DCT Method"))
                 self.jpeg_dct_option_jpeg.setGeometry(10, 245, 120, 25)
 
                 self.jpeg_dct_choice_jpeg = QtGui.QComboBox(parent=self.general_options_panel_jpeg)
@@ -344,17 +363,17 @@ class OutputProBitmap(inkex.Effect):
                 self.jpeg_dct_choice_jpeg.addItems(list_of_dct_jpeg.keys())
                 self.jpeg_dct_choice_jpeg.activated.connect(self.generate_preview)
 
-                self.cmyk_advanced_manipulation_option_jpeg = QtGui.QCheckBox(_(u"Manipulação apurada de cores"), parent=self.general_options_panel_jpeg)
+                self.cmyk_advanced_manipulation_option_jpeg = QtGui.QCheckBox(_(u"Accurate color handling"), parent=self.general_options_panel_jpeg)
                 self.cmyk_advanced_manipulation_option_jpeg.setGeometry(283, 80, 325, 25)
                 self.cmyk_advanced_manipulation_option_jpeg.clicked.connect(self.cmyk_advanced_manipulation_click_jpeg)
 
-                self.cmyk_overblack_jpeg = QtGui.QCheckBox(_(u"Sobrepôr o preto"), parent=self.general_options_panel_jpeg)
+                self.cmyk_overblack_jpeg = QtGui.QCheckBox(_(u"Black overlay"), parent=self.general_options_panel_jpeg)
                 self.cmyk_overblack_jpeg.setGeometry(283, 115, 325, 25)
                 self.cmyk_overblack_jpeg.setEnabled(False)
                 self.cmyk_overblack_jpeg.clicked.connect(self.cmyk_advanced_manipulation_click_jpeg)
 
                 self.area_to_export_title = QtGui.QLabel(parent=self.general_geometry_panel)
-                self.area_to_export_title.setText(_(u"Área a exportar").upper())
+                self.area_to_export_title.setText(_(u"Area to export").upper())
                 self.area_to_export_title.setGeometry(10, 20, 250, 15)
                 self.area_to_export_title.setFont(QtGui.QFont('Ubuntu', 8))
 
@@ -364,7 +383,7 @@ class OutputProBitmap(inkex.Effect):
                 self.area_to_export_choice.activated.connect(self.change_area_to_export)
 
                 self.dpi_title = QtGui.QLabel(parent=self.general_geometry_panel)
-                self.dpi_title.setText(_(u"Pontos por Polegada").upper())
+                self.dpi_title.setText(_(u"Dots per inch").upper())
                 self.dpi_title.setGeometry(270, 20, 200, 15)
                 self.dpi_title.setFont(QtGui.QFont('Ubuntu', 8))
 
@@ -400,7 +419,7 @@ class OutputProBitmap(inkex.Effect):
                 self.y1_value.editingFinished.connect(self.change_area_to_export)
 
                 self.area_to_export_id_title = QtGui.QLabel(parent=self.general_geometry_panel)
-                self.area_to_export_id_title.setText(_(u"Objeto a exportar").upper())
+                self.area_to_export_id_title.setText(_(u"Object to be exported").upper())
                 self.area_to_export_id_title.setGeometry(10, 70, 300, 15)
                 self.area_to_export_id_title.setFont(QtGui.QFont('Ubuntu', 8))
 
@@ -409,39 +428,39 @@ class OutputProBitmap(inkex.Effect):
 
                 self.area_to_export_idonly_check = QtGui.QCheckBox(parent=self.general_geometry_panel)
                 self.area_to_export_idonly_check.setGeometry(10, 120, 400, 25)
-                self.area_to_export_idonly_check.setText(_(u"Exportar apenas o objeto"))
+                self.area_to_export_idonly_check.setText(_(u"Export only object"))
 
                 self.prepress_paper_settings_label = QtGui.QLabel(parent=self.general_prepress_panel)
                 self.prepress_paper_settings_label.setGeometry(10, 10, 300, 15)
-                self.prepress_paper_settings_label.setText(_(u"Cofiguração do Papel ou filme").upper())
+                self.prepress_paper_settings_label.setText(_(u"Paper or film setting").upper())
                 self.prepress_paper_settings_label.setFont(QtGui.QFont('Ubuntu', 8))
 
                 self.prepress_paper_settings_invert = QtGui.QCheckBox(parent=self.general_prepress_panel)
                 self.prepress_paper_settings_invert.setGeometry(10, 25, 300, 25)
-                self.prepress_paper_settings_invert.setText(_(u"Inverter"))
+                self.prepress_paper_settings_invert.setText(_(u"Invert"))
                 self.prepress_paper_settings_invert.setChecked(False)
                 self.prepress_paper_settings_invert.clicked.connect(self.generate_preview)
 
                 self.prepress_paper_settings_mirror = QtGui.QCheckBox(parent=self.general_prepress_panel)
                 self.prepress_paper_settings_mirror.setGeometry(10, 50, 300, 25)
-                self.prepress_paper_settings_mirror.setText(_(u"Espelhar"))
+                self.prepress_paper_settings_mirror.setText(_(u"Mirror"))
                 self.prepress_paper_settings_mirror.setChecked(False)
                 self.prepress_paper_settings_mirror.clicked.connect(self.generate_preview)
 
                 self.prepress_paper_cutmarks_label = QtGui.QLabel(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_label.setGeometry(10, 85, 300, 15)
-                self.prepress_paper_cutmarks_label.setText(_(u"Marcas de corte").upper())
+                self.prepress_paper_cutmarks_label.setText(_(u"Crop marks").upper())
                 self.prepress_paper_cutmarks_label.setFont(QtGui.QFont('Ubuntu', 8))
 
                 self.prepress_paper_cutmarks_check = QtGui.QCheckBox(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_check.setGeometry(10, 100, 300, 25)
-                self.prepress_paper_cutmarks_check.setText(_(u"Inserir marcas de corte"))
+                self.prepress_paper_cutmarks_check.setText(_(u"Insert crop marks"))
                 self.prepress_paper_cutmarks_check.setChecked(False)
                 self.prepress_paper_cutmarks_check.clicked.connect(self.cut_marks_insert_change)
 
                 self.prepress_paper_cutmarks_strokewidth_label = QtGui.QLabel(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_strokewidth_label.setGeometry(10, 125, 200, 25)
-                self.prepress_paper_cutmarks_strokewidth_label.setText(_(u"Espessura da marca:"))
+                self.prepress_paper_cutmarks_strokewidth_label.setText(_(u"Mark thickness:"))
                 self.prepress_paper_cutmarks_strokewidth_label.setEnabled(False)
 
                 self.prepress_paper_cutmarks_strokewidth_value = QtGui.QLineEdit(parent=self.general_prepress_panel)
@@ -452,14 +471,14 @@ class OutputProBitmap(inkex.Effect):
 
                 self.prepress_paper_cutmarks_strokewidth_choice = QtGui.QComboBox(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_strokewidth_choice.setGeometry(260,125,50,25)
-                self.prepress_paper_cutmarks_strokewidth_choice.addItems(inkex.uuconv.keys())
+                self.prepress_paper_cutmarks_strokewidth_choice.addItems(uuconv.keys())
                 self.prepress_paper_cutmarks_strokewidth_choice.setCurrentIndex(5)
                 self.prepress_paper_cutmarks_strokewidth_choice.activated.connect(self.generate_preview)
                 self.prepress_paper_cutmarks_strokewidth_choice.setEnabled(False)
 
                 self.prepress_paper_cutmarks_bleedsize_label = QtGui.QLabel(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_bleedsize_label.setGeometry(10, 150, 200, 25)
-                self.prepress_paper_cutmarks_bleedsize_label.setText(_(u"Sangria:"))
+                self.prepress_paper_cutmarks_bleedsize_label.setText(_(u"Bleed:"))
                 self.prepress_paper_cutmarks_bleedsize_label.setEnabled(False)
 
                 self.prepress_paper_cutmarks_bleedsize_value = QtGui.QLineEdit(parent=self.general_prepress_panel)
@@ -470,14 +489,14 @@ class OutputProBitmap(inkex.Effect):
 
                 self.prepress_paper_cutmarks_bleedsize_choice = QtGui.QComboBox(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_bleedsize_choice.setGeometry(260,150,50,25)
-                self.prepress_paper_cutmarks_bleedsize_choice.addItems(inkex.uuconv.keys())
+                self.prepress_paper_cutmarks_bleedsize_choice.addItems(uuconv.keys())
                 self.prepress_paper_cutmarks_bleedsize_choice.setCurrentIndex(5)
                 self.prepress_paper_cutmarks_bleedsize_choice.activated.connect(self.generate_preview)
                 self.prepress_paper_cutmarks_bleedsize_choice.setEnabled(False)
 
                 self.prepress_paper_cutmarks_marksize_label = QtGui.QLabel(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_marksize_label.setGeometry(10, 175, 200, 25)
-                self.prepress_paper_cutmarks_marksize_label.setText(_(u"Tamanho da marca:"))
+                self.prepress_paper_cutmarks_marksize_label.setText(_(u"Mark size:"))
                 self.prepress_paper_cutmarks_marksize_label.setEnabled(False)
 
                 self.prepress_paper_cutmarks_marksize_value = QtGui.QLineEdit(parent=self.general_prepress_panel)
@@ -488,26 +507,26 @@ class OutputProBitmap(inkex.Effect):
 
                 self.prepress_paper_cutmarks_marksize_choice = QtGui.QComboBox(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_marksize_choice.setGeometry(260,175,50,25)
-                self.prepress_paper_cutmarks_marksize_choice.addItems(inkex.uuconv.keys())
+                self.prepress_paper_cutmarks_marksize_choice.addItems(uuconv.keys())
                 self.prepress_paper_cutmarks_marksize_choice.setCurrentIndex(5)
                 self.prepress_paper_cutmarks_marksize_choice.activated.connect(self.generate_preview)
                 self.prepress_paper_cutmarks_marksize_choice.setEnabled(False)
 
                 self.prepress_paper_cutmarks_inside_check = QtGui.QCheckBox(parent=self.general_prepress_panel)
                 self.prepress_paper_cutmarks_inside_check.setGeometry(10, 200, 300, 25)
-                self.prepress_paper_cutmarks_inside_check.setText(_(u"Sem marcas internas"))
+                self.prepress_paper_cutmarks_inside_check.setText(_(u"No internal marks"))
                 self.prepress_paper_cutmarks_inside_check.setChecked(False)
                 self.prepress_paper_cutmarks_inside_check.setEnabled(False)
                 self.prepress_paper_cutmarks_inside_check.clicked.connect(self.generate_preview)
 
                 self.imposition_label = QtGui.QLabel(parent=self.general_imposition_panel)
                 self.imposition_label.setGeometry(10, 10, 300, 15)
-                self.imposition_label.setText(_(u"Quantidade de imposições").upper())
+                self.imposition_label.setText(_(u"Amount of impositions").upper())
                 self.imposition_label.setFont(QtGui.QFont('Ubuntu', 8))
 
                 self.imposition_vertical_number_label = QtGui.QLabel(parent=self.general_imposition_panel)
                 self.imposition_vertical_number_label.setGeometry(10, 25, 200, 25)
-                self.imposition_vertical_number_label.setText(_(u"Linhas:"))
+                self.imposition_vertical_number_label.setText(_(u"Lines:"))
 
                 self.imposition_vertical_number_value = QtGui.QSpinBox(parent=self.general_imposition_panel)
                 self.imposition_vertical_number_value.setGeometry(210, 25, 50, 25)
@@ -517,7 +536,7 @@ class OutputProBitmap(inkex.Effect):
 
                 self.imposition_horizontal_number_label = QtGui.QLabel(parent=self.general_imposition_panel)
                 self.imposition_horizontal_number_label.setGeometry(10, 60, 200, 25)
-                self.imposition_horizontal_number_label.setText(_(u"Colunas:"))
+                self.imposition_horizontal_number_label.setText(_(u"Columns:"))
 
                 self.imposition_horizontal_number_value = QtGui.QSpinBox(parent=self.general_imposition_panel)
                 self.imposition_horizontal_number_value.setGeometry(210, 60, 50, 25)
@@ -527,7 +546,7 @@ class OutputProBitmap(inkex.Effect):
 
                 self.imposition_space_label = QtGui.QLabel(parent=self.general_imposition_panel)
                 self.imposition_space_label.setGeometry(10, 90, 200, 25)
-                self.imposition_space_label.setText(_(u"Espaço entre as marcas:"))
+                self.imposition_space_label.setText(_(u"Space between marks:"))
 
                 self.imposition_space_value = QtGui.QLineEdit(parent=self.general_imposition_panel)
                 self.imposition_space_value.setGeometry(210, 90, 50, 25)
@@ -536,11 +555,11 @@ class OutputProBitmap(inkex.Effect):
 
                 self.imposition_space_choice = QtGui.QComboBox(parent=self.general_imposition_panel)
                 self.imposition_space_choice.setGeometry(260,90,50,25)
-                self.imposition_space_choice.addItems(inkex.uuconv.keys())
+                self.imposition_space_choice.addItems(uuconv.keys())
                 self.imposition_space_choice.setCurrentIndex(5)
                 self.imposition_space_choice.activated.connect(self.generate_preview)
 
-                self.export_button = QtGui.QPushButton(QtGui.QIcon.fromTheme("document-export"), _("Exportar"), parent=self)
+                self.export_button = QtGui.QPushButton(QtGui.QIcon.fromTheme("document-export"), _("Export"), parent=self)
                 self.export_button.setGeometry(740, 560, 200, 30)
                 self.export_button.setIconSize(QtCore.QSize(20,20))
                 self.export_button.clicked.connect(self.export)
@@ -572,31 +591,31 @@ class OutputProBitmap(inkex.Effect):
                         image_width = int(file_info.split(' ')[2].split('x')[0])
                         image_height = int(file_info.split(' ')[2].split('x')[1])
 
-                        marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
-                        imposition_space = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
+                        marksize = (self.dpi_choice.value() / 90) * unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                        imposition_space = (self.dpi_choice.value() / 90) * unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
 
                         file_info = subprocess.Popen(['identify', '-verbose',dirpathTempFolder +  '/result-imp.' + list_of_export_formats[self.format_choice.currentIndex()].lower()], stdout=subprocess.PIPE).communicate()[0]
 
                         file_info_final = ''
                         for line in file_info.split('\n'):
                             if '  Format: ' in line:
-                                file_info_final += 'Formato da imagem: <strong>' + line.replace('  Format: ', '') + '</strong><br>'
+                                file_info_final += 'Image Format: <strong>' + line.replace('  Format: ', '') + '</strong><br>'
                             if '  Geometry: ' in line:
-                                file_info_final += 'Largura e altura: <strong>' + line.replace('  Geometry: ', '').split('+')[0] + '</strong><br>'
+                                file_info_final += 'Width and height: <strong>' + line.replace('  Geometry: ', '').split('+')[0] + '</strong><br>'
                             if '  Resolution: ' in line:
-                                file_info_final += 'Resolução: <strong>' + line.replace('  Resolution: ', '')
+                                file_info_final += 'Resolution: <strong>' + line.replace('  Resolution: ', '')
                             if '  Units: ' in line:
-                                file_info_final += ' ' + line.replace('  Units: ', '').replace('Per', ' por ').replace('Pixels', 'pixels').replace('Centimeter', 'centímetro').replace('Inch', 'polegada') + '</strong><br>'
+                                file_info_final += ' ' + line.replace('  Units: ', '').replace('Per', ' per ').replace('Pixels', 'pixels').replace('Centimeter', 'centimeter').replace('Inch', 'inch') + '</strong><br>'
                             if '  Colorspace: ' in line:
-                                file_info_final += 'Modo de cores: <strong>' + line.replace('  Colorspace: ', '') + '</strong><br>'
+                                file_info_final += 'Colorspace: <strong>' + line.replace('  Colorspace: ', '') + '</strong><br>'
                             if '  Depth: ' in line:
-                                file_info_final += 'Profundidade: <strong>' + line.replace('  Depth: ', '') + '</strong><br>'
+                                file_info_final += 'Depth: <strong>' + line.replace('  Depth: ', '') + '</strong><br>'
                             if '  Quality: ' in line:
-                                file_info_final += 'Qualidade: <strong>' + line.replace('  Quality: ', '') + '%</strong><br>'
+                                file_info_final += 'Quality: <strong>' + line.replace('  Quality: ', '') + '%</strong><br>'
                             if '  Filesize: ' in line:
-                                file_info_final += 'Tamanho do arquivo: <strong>' + line.replace('  Filesize: ', '') + '</strong><br>'
+                                file_info_final += 'Filesize: <strong>' + line.replace('  Filesize: ', '') + '</strong><br>'
                             if '    jpeg:sampling-factor: ' in line:
-                                file_info_final += 'Amostragem: <strong>' + line.replace('    jpeg:sampling-factor: ', '') + '</strong><br>'
+                                file_info_final += 'Sampling: <strong>' + line.replace('    jpeg:sampling-factor: ', '') + '</strong><br>'
 
                         if self.prepress_paper_cutmarks_check.isChecked():
                             margin = marksize
@@ -678,13 +697,13 @@ class OutputProBitmap(inkex.Effect):
                     file_info = subprocess.Popen(['identify', dirpathTempFolder +  '/source.png'], stdout=subprocess.PIPE).communicate()[0]
 
                     if self.prepress_paper_cutmarks_check.isChecked():
-                        bleedsize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
-                        marksize = (self.dpi_choice.value() / 90) * inkex.unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
+                        bleedsize = (self.dpi_choice.value() / 90) * unittouu(str(self.prepress_paper_cutmarks_bleedsize_value.text()) + str(self.prepress_paper_cutmarks_bleedsize_choice.currentText()))
+                        marksize = (self.dpi_choice.value() / 90) * unittouu(str(self.prepress_paper_cutmarks_marksize_value.text()) + str(self.prepress_paper_cutmarks_marksize_choice.currentText()))
                     else:
                         bleedsize = 0
                         marksize = 0
 
-                    imposition_space = (self.dpi_choice.value() / 90) *inkex.unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
+                    imposition_space = (self.dpi_choice.value() / 90) *unittouu(str(self.imposition_space_value.text()) + str(self.imposition_space_choice.currentText()))
 
                     image_width = []
                     for i in range(self.imposition_vertical_number_value.value()):
@@ -721,7 +740,7 @@ class OutputProBitmap(inkex.Effect):
                         last_height = 0
 
                     if self.prepress_paper_cutmarks_check.isChecked():
-                        cutmarks.generate_final_file(False, self.prepress_paper_cutmarks_inside_check.isChecked(),list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, imposition_space,inkex.unittouu(str(self.prepress_paper_cutmarks_strokewidth_value.text()) + str(self.prepress_paper_cutmarks_strokewidth_choice.currentText())), bleedsize, marksize, dirpathTempFolder)
+                        cutmarks.generate_final_file(False, self.prepress_paper_cutmarks_inside_check.isChecked(),list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()], image_width, image_height, imposition_space,unittouu(str(self.prepress_paper_cutmarks_strokewidth_value.text()) + str(self.prepress_paper_cutmarks_strokewidth_choice.currentText())), bleedsize, marksize, dirpathTempFolder)
 
                         cut_marks_command = ['composite']
                         cut_marks_command.append('-compose')
@@ -780,7 +799,7 @@ class OutputProBitmap(inkex.Effect):
 
             def change_color_mode_jpeg(self):
                 if list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'CMYK':
-                    self.color_mode_title_tip_jpeg.setText(u'Recomendado para impressão gráfica')
+                    self.color_mode_title_tip_jpeg.setText(u'Recommended for graphic printing')
                     self.cmyk_advanced_manipulation_option_jpeg.setChecked(False)
                     self.cmyk_advanced_manipulation_option_jpeg.setEnabled(True)
                     self.cmyk_overblack_jpeg.setEnabled(False)
@@ -798,11 +817,11 @@ class OutputProBitmap(inkex.Effect):
                     self.document_color_profile_title_jpeg.setEnabled(False)
                     self.general_prepress_panel.setEnabled(False)
                 if list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'CMY':
-                    self.color_mode_title_tip_jpeg.setText(u'Recomendado para casos específicos de impressão')
+                    self.color_mode_title_tip_jpeg.setText(u'Recommended for specific print cases')
                 elif list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'RGB':
-                    self.color_mode_title_tip_jpeg.setText(u'Recomendado para uso em telas')
+                    self.color_mode_title_tip_jpeg.setText(u'Recommended for use on screens')
                 elif list_of_color_modes_jpeg[self.color_mode_choice_jpeg.currentIndex()] == 'Gray':
-                    self.color_mode_title_tip_jpeg.setText(u'Imagem em tons de cinza')
+                    self.color_mode_title_tip_jpeg.setText(u'Grayscale image')
 
                 self.generate_preview()
 
@@ -1010,7 +1029,7 @@ class OutputProBitmap(inkex.Effect):
                 self.move((QtGui.QDesktopWidget().screenGeometry().width()-self.geometry().width())/2, (QtGui.QDesktopWidget().screenGeometry().height()-self.geometry().height())/2)
 
             def export(self):
-                self.location_path = QtGui.QFileDialog.getSaveFileName(self, _(u"Salvar imagem"), os.environ.get('HOME', None), list_of_export_formats[self.format_choice.currentIndex()]).toUtf8()
+                self.location_path = QtGui.QFileDialog.getSaveFileName(self, _(u"Save image"), os.environ.get('HOME', None), list_of_export_formats[self.format_choice.currentIndex()]).toUtf8()
 
                 if not self.format_preview_check.isChecked():
                     self.generate_final_file()
