@@ -53,3 +53,8 @@ The [Output Pro](http://jonata.org/inkscape/outputpro/) extension was originally
 
 ## License
 Output Pro is licensed under the terms of the GNU License.
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/jonata/Inkscape-OUTPUT-PRO/badge.svg?style=beer-square)](https://beerpay.io/jonata/Inkscape-OUTPUT-PRO)  [![Beerpay](https://beerpay.io/jonata/Inkscape-OUTPUT-PRO/make-wish.svg?style=flat-square)](https://beerpay.io/jonata/Inkscape-OUTPUT-PRO?focus=wish)
